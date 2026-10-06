@@ -77,7 +77,7 @@ public class Board {
     }
 
     private Piece pieceAt(String string){
-        return null;
+        return pieceAt(Square.at(string));
     }
 
 

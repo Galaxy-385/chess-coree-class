@@ -63,12 +63,20 @@ public class Board {
     }
 
     public Board move (Square from, Square to){
-        return null;
+
+        Piece piece = pieces.get(from);
+
+        Map<Square, Piece> newPieces = new HashMap<>(pieces);
+
+        newPieces.remove(from);
+        newPieces.put(to, piece);
+
+        return new Board(newPieces);
     }
 
     public Board(Map<Square, Piece> pieces){this.pieces = pieces;}
 
-    Piece pieceAt(File file, Rank rank){
+    public Piece pieceAt(File file, Rank rank){
         return pieceAt(new Square(file, rank));
     }
 

@@ -1,16 +1,19 @@
 package software.ulpgc.chess;
 
-import static software.ulpgc.chess.File.*;
-import static software.ulpgc.chess.Rank.*;
-
 public class Main {
-    static void main(){
-        Square a = new Square(A, R1);
-        Square b = new Square(A, R1);
-        Square c = b;
+    public static void main(String[] args){
 
-        System.out.println(a == b);
-        System.out.println(a.equals(b));
-        System.out.println(b == c);
+        Square a1 = Square.at("a1");
+        Square h8 = Square.at("h8");
+
+        System.out.println(a1);
+        System.out.println(h8);
+
+        Board board = Board.initial();
+
+        Board movedBoard = board.move(
+                Square.at("e2"),
+                Square.at("e4")
+        );
     }
 }

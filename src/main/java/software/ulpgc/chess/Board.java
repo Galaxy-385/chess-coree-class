@@ -74,7 +74,9 @@ public class Board {
         return new Board(newPieces);
     }
 
-    public Board(Map<Square, Piece> pieces){this.pieces = pieces;}
+    public Board(Map<Square, Piece> pieces){
+        this.pieces = Map.copyOf(pieces);
+    }
 
     public Piece pieceAt(File file, Rank rank){
         return pieceAt(new Square(file, rank));
@@ -86,6 +88,10 @@ public class Board {
 
     private Piece pieceAt(String string){
         return pieceAt(Square.at(string));
+    }
+
+    public int pieceCount(){
+        return pieces.size();
     }
 
 

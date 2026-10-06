@@ -2,54 +2,35 @@ package software.ulpgc.chess;
 
 public enum Piece {
 
-    WhitePawn,
-    WhiteRook,
-    WhiteQueen,
-    WhiteKnight,
-    WhiteBishop,
-    WhiteKing,
-    BlackPawn,
-    BlackRook,
-    BlackQueen,
-    BlackKnight,
-    BlackBishop,
-    BlackKing;
+    WhitePawn(Color.White, PieceType.Pawn),
+    WhiteRook(Color.White, PieceType.Rook),
+    WhiteQueen(Color.White, PieceType.Queen),
+    WhiteKnight(Color.White, PieceType.Knight),
+    WhiteBishop(Color.White, PieceType.Bishop),
+    WhiteKing(Color.White, PieceType.King),
 
-    Color color(){
-        return isWhite() ? Color.White : Color.Black;
+    BlackPawn(Color.Black, PieceType.Pawn),
+    BlackRook(Color.Black, PieceType.Rook),
+    BlackQueen(Color.Black, PieceType.Queen),
+    BlackKnight(Color.Black, PieceType.Knight),
+    BlackBishop(Color.Black, PieceType.Bishop),
+    BlackKing(Color.Black, PieceType.King);
+
+    private final Color color;
+    private final PieceType type;
+
+    Piece(Color color, PieceType type) {
+        this.color = color;
+        this.type = type;
     }
 
-    Boolean isPawn(){
-        return this == WhitePawn || this == BlackPawn;
+    public Color color(){
+        return color;
     }
 
-    boolean isKnight(){
-        return this == WhiteKnight || this == BlackKnight;
-    }
-
-    boolean isBishop(){
-        return this == WhiteBishop || this == BlackBishop;
-    }
-
-    boolean isQueen(){
-        return this == WhiteQueen || this == BlackQueen;
-    }
-
-    boolean isRook(){
-        return this == WhiteRook || this == BlackRook;
-    }
-
-    boolean isKing(){
-        return this == WhiteKing || this == BlackKing;
+    public PieceType type(){
+        return type;
     }
 
 
-    private Boolean isWhite(){
-        return this == WhitePawn
-                || this == WhiteBishop
-                || this == WhiteKing
-                || this == WhiteRook
-                || this == WhiteKnight
-                || this == WhiteQueen;
-    }
 }

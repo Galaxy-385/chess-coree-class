@@ -10,6 +10,8 @@ import static software.ulpgc.chess.Square.at;
 public class Board {
 
     private final Map<Square, Piece> pieces;
+    private final CastlingRights castlingRights;
+    private final Square enPassantTarget;
 
     public static Board InitialMap() {
         Map<Square, Piece> Initial = Map.ofEntries(
@@ -62,20 +64,99 @@ public class Board {
         return InitialMap();
     }
 
+
+
     public Board move(Square from, Square to) {
 
         Piece piece = pieces.get(from);
+        Piece capturedPiece = pieces.get(to);
 
         Map<Square, Piece> newPieces = new HashMap<>(pieces);
 
         newPieces.remove(from);
         newPieces.put(to, piece);
 
-        return new Board(newPieces);
+        CastlingRights newRights = castlingRights;
+
+        // moving a king removes both castling rights
+        if (piece == Piece.WhiteKing) {
+            newRights = newRights.withoutWhiteCastling();
+        }
+
+        if (piece == Piece.BlackKing) {
+            newRights = newRights.withoutBlackCastling();
+        }
+
+        // moving a rook removes its corresponding castling right
+        if (piece == Piece.WhiteRook) {
+            if (from.equals(Square.at("a1"))) {
+                newRights = newRights.withoutWhiteQueenSide();
+            }
+
+            if (from.equals(Square.at("h1"))) {
+                newRights = newRights.withoutWhiteKingSide();
+            }
+        }
+
+        if (piece == Piece.BlackRook) {
+            if (from.equals(Square.at("a8"))) {
+                newRights = newRights.withoutBlackQueenSide();
+            }
+
+            if (from.equals(Square.at("h8"))) {
+                newRights = newRights.withoutBlackKingSide();
+            }
+        }
+
+        // capturing a rook on its initial square removes its castling right
+        if (capturedPiece == Piece.WhiteRook) {
+            if (to.equals(Square.at("a1"))) {
+                newRights = newRights.withoutWhiteQueenSide();
+            }
+
+            if (to.equals(Square.at("h1"))) {
+                newRights = newRights.withoutWhiteKingSide();
+            }
+        }
+
+        if (capturedPiece == Piece.BlackRook) {
+            if (to.equals(Square.at("a8"))) {
+                newRights = newRights.withoutBlackQueenSide();
+            }
+
+            if (to.equals(Square.at("h8"))) {
+                newRights = newRights.withoutBlackKingSide();
+            }
+        }
+
+        return new Board(newPieces, newRights);
     }
 
+
+
     public Board(Map<Square, Piece> pieces) {
+        this(pieces, CastlingRights.initial(), null);
+    }
+
+    public Board(
+            Map<Square, Piece> pieces,
+            CastlingRights castlingRights) {
+
+        this(pieces, castlingRights, null);
+    }
+
+    public Board(
+            Map<Square, Piece> pieces,
+            CastlingRights castlingRights,
+            Square enPassantTarget) {
+
         this.pieces = Map.copyOf(pieces);
+        this.castlingRights = castlingRights;
+        this.enPassantTarget = enPassantTarget;
+    }
+
+    public Square enPassantTarget() {
+        return enPassantTarget;
     }
 
     public Piece pieceAt(File file, Rank rank) {
@@ -98,8 +179,7 @@ public class Board {
         return legalMove(from, to, null);
     }
 
-    public Board legalMove(
-            Square from, Square to, Piece promotionPiece) {
+    public Board legalMove(Square from, Square to, Piece promotionPiece) {
 
         MovementRules rules = new MovementRules();
 
@@ -108,6 +188,34 @@ public class Board {
         }
 
         Piece movingPiece = pieceAt(from);
+
+        boolean isCastling =
+                (movingPiece == Piece.WhiteKing ||
+                        movingPiece == Piece.BlackKing) &&
+                        from.rank() == to.rank() &&
+                        Math.abs(to.file().getSymbol() -
+                                from.file().getSymbol()) == 2;
+
+        if (isCastling) {
+            int rank = from.rank().getValue();
+            boolean kingSide =
+                    to.file().getSymbol() > from.file().getSymbol();
+
+            Square rookFrom = Square.at(
+                    kingSide
+                            ? (rank == 1 ? "h1" : "h8")
+                            : (rank == 1 ? "a1" : "a8")
+            );
+
+            Square rookTo = Square.at(
+                    kingSide
+                            ? (rank == 1 ? "f1" : "f8")
+                            : (rank == 1 ? "d1" : "d8")
+            );
+
+            Board kingMoved = move(from, to);
+            return kingMoved.move(rookFrom, rookTo);
+        }
 
         boolean reachesLastRank =
                 movingPiece.type() == PieceType.Pawn &&
@@ -136,7 +244,7 @@ public class Board {
 
             updatedPieces.put(to, promotionPiece);
 
-            return new Board(updatedPieces);
+            return new Board(updatedPieces, movedBoard.castlingRights);
         }
 
         return movedBoard;
@@ -157,4 +265,9 @@ public class Board {
                 type == PieceType.Bishop ||
                 type == PieceType.Knight;
     }
+
+    public CastlingRights castlingRights() {
+        return castlingRights;
+    }
+
 }

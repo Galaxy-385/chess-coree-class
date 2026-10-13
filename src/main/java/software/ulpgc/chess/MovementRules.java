@@ -14,7 +14,8 @@ public class MovementRules {
                 new RookMovementRule(),
                 new BishopMovementRule(),
                 new QueenMovementRule(),
-                new KingMovementRule()
+                new KingMovementRule(),
+                new CastlingMovementRule()
         );
     }
 

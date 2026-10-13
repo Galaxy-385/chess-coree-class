@@ -97,4 +97,45 @@ public class BoardLegalMoveTest {
         assertNull(result.pieceAt(Square.at("d5")));
         assertNull(result.pieceAt(Square.at("e5")));
     }
+
+    @Test
+    void blackPawnCanCaptureEnPassant() {
+        Board board = new Board(
+                Map.of(
+                        Square.at("e4"), Piece.BlackPawn,
+                        Square.at("d4"), Piece.WhitePawn
+                ),
+                CastlingRights.initial(),
+                Square.at("d3")
+        );
+
+        Board result = board.legalMove(
+                Square.at("e4"),
+                Square.at("d3")
+        );
+
+        assertEquals(Piece.BlackPawn, result.pieceAt(Square.at("d3")));
+        assertNull(result.pieceAt(Square.at("d4")));
+        assertNull(result.pieceAt(Square.at("e4")));
+    }
+
+    @Test
+    void enPassantTargetExpiresAfterAnotherMove() {
+        Board board = new Board(
+                Map.of(
+                        Square.at("e5"), Piece.WhitePawn,
+                        Square.at("d5"), Piece.BlackPawn,
+                        Square.at("a1"), Piece.WhiteRook
+                ),
+                CastlingRights.initial(),
+                Square.at("d6")
+        );
+
+        Board result = board.move(
+                Square.at("a1"),
+                Square.at("a2")
+        );
+
+        assertNull(result.enPassantTarget());
+    }
 }

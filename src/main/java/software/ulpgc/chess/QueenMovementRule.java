@@ -1,0 +1,69 @@
+
+package software.ulpgc.chess;
+
+public class QueenMovementRule implements MovementRule {
+
+    @Override
+    public boolean canMove(Board board, Square from, Square to) {
+        Piece piece = board.pieceAt(from);
+
+        if (piece == null || piece.type() != PieceType.Queen) {
+            return false;
+        }
+
+        if (from.equals(to)) {
+            return false;
+        }
+
+        int fileDifference = Math.abs(
+                to.file().getSymbol() - from.file().getSymbol()
+        );
+
+        int rankDifference = Math.abs(
+                to.rank().getValue() - from.rank().getValue()
+        );
+
+        boolean straightMove = fileDifference == 0 || rankDifference == 0;
+        boolean diagonalMove = fileDifference == rankDifference;
+
+        if (!straightMove && !diagonalMove) {
+            return false;
+        }
+
+        Piece destinationPiece = board.pieceAt(to);
+
+        if (destinationPiece != null &&
+                destinationPiece.color() == piece.color()) {
+            return false;
+        }
+
+        int fileDirection = Integer.compare(
+                to.file().getSymbol() - from.file().getSymbol(), 0
+        );
+
+        int rankDirection = Integer.compare(
+                to.rank().getValue() - from.rank().getValue(), 0
+        );
+
+        int file = from.file().getSymbol() - 'a' + fileDirection;
+        int rank = from.rank().getValue() - 1 + rankDirection;
+
+        while (file != to.file().getSymbol() - 'a' ||
+                rank != to.rank().getValue() - 1) {
+
+            Square square = new Square(
+                    File.values()[file],
+                    Rank.values()[rank]
+            );
+
+            if (board.pieceAt(square) != null) {
+                return false;
+            }
+
+            file += fileDirection;
+            rank += rankDirection;
+        }
+
+        return true;
+    }
+}

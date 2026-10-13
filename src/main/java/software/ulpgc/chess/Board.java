@@ -1,3 +1,4 @@
+
 package software.ulpgc.chess;
 
 import java.util.HashMap;
@@ -5,7 +6,6 @@ import java.util.Map;
 
 import static software.ulpgc.chess.Piece.*;
 import static software.ulpgc.chess.Square.at;
-
 
 public class Board {
 
@@ -58,11 +58,11 @@ public class Board {
         return new Board(Initial);
     }
 
-    public static Board initial(){
+    public static Board initial() {
         return InitialMap();
     }
 
-    public Board move (Square from, Square to){
+    public Board move(Square from, Square to) {
 
         Piece piece = pieces.get(from);
 
@@ -74,25 +74,87 @@ public class Board {
         return new Board(newPieces);
     }
 
-    public Board(Map<Square, Piece> pieces){
+    public Board(Map<Square, Piece> pieces) {
         this.pieces = Map.copyOf(pieces);
     }
 
-    public Piece pieceAt(File file, Rank rank){
+    public Piece pieceAt(File file, Rank rank) {
         return pieceAt(new Square(file, rank));
     }
 
-    private Piece pieceAt(Square square){
+    public Piece pieceAt(Square square) {
         return pieces.get(square);
     }
 
-    private Piece pieceAt(String string){
+    private Piece pieceAt(String string) {
         return pieceAt(Square.at(string));
     }
 
-    public int pieceCount(){
+    public int pieceCount() {
         return pieces.size();
     }
 
+    public Board legalMove(Square from, Square to) {
+        return legalMove(from, to, null);
+    }
 
+    public Board legalMove(
+            Square from, Square to, Piece promotionPiece) {
+
+        MovementRules rules = new MovementRules();
+
+        if (!rules.canMove(this, from, to)) {
+            throw new IllegalArgumentException("Illegal move");
+        }
+
+        Piece movingPiece = pieceAt(from);
+
+        boolean reachesLastRank =
+                movingPiece.type() == PieceType.Pawn &&
+                        ((movingPiece.color() == Color.White &&
+                                to.rank() == Rank.R8) ||
+                                (movingPiece.color() == Color.Black &&
+                                        to.rank() == Rank.R1));
+
+        if (reachesLastRank &&
+                !isValidPromotionPiece(
+                        promotionPiece, movingPiece.color())) {
+            throw new IllegalArgumentException(
+                    "A pawn must promote to a queen, rook, bishop or knight");
+        }
+
+        if (!reachesLastRank && promotionPiece != null) {
+            throw new IllegalArgumentException(
+                    "Promotion is only allowed on the last rank");
+        }
+
+        Board movedBoard = move(from, to);
+
+        if (reachesLastRank) {
+            Map<Square, Piece> updatedPieces =
+                    new HashMap<>(movedBoard.pieces);
+
+            updatedPieces.put(to, promotionPiece);
+
+            return new Board(updatedPieces);
+        }
+
+        return movedBoard;
+    }
+
+    private boolean isValidPromotionPiece(
+            Piece promotionPiece, Color pawnColor) {
+
+        if (promotionPiece == null ||
+                promotionPiece.color() != pawnColor) {
+            return false;
+        }
+
+        PieceType type = promotionPiece.type();
+
+        return type == PieceType.Queen ||
+                type == PieceType.Rook ||
+                type == PieceType.Bishop ||
+                type == PieceType.Knight;
+    }
 }

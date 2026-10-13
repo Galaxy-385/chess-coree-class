@@ -24,8 +24,28 @@ public class PawnMovementRule implements MovementRule {
 
 
         if (Math.abs(fileDifference) == 1 && rankDifference == direction) {
-            return destinationPiece != null &&
-                    destinationPiece.color() != piece.color();
+
+            // normal diagonal capture
+            if (destinationPiece != null &&
+                    destinationPiece.color() != piece.color()) {
+                return true;
+            }
+
+            // en passant capture
+            if (destinationPiece == null &&
+                    to.equals(board.enPassantTarget())) {
+
+                Square capturedPawnSquare = new Square(
+                        to.file(),
+                        Rank.values()[to.rank().ordinal() - direction]
+                );
+
+                Piece capturedPawn = board.pieceAt(capturedPawnSquare);
+
+                return capturedPawn != null &&
+                        capturedPawn.type() == PieceType.Pawn &&
+                        capturedPawn.color() != piece.color();
+            }
         }
 
         if (fileDifference != 0) {

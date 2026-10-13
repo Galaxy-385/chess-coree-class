@@ -126,5 +126,20 @@ public class BoardTest {
         assertEquals(32, board.pieceCount());
     }
 
+    @Test
+    void storesEnPassantTargetAfterPawnMovesTwoSquares() {
+        Board board = Board.initial();
+
+        Board movedBoard = board.move(
+                Square.at("e2"),
+                Square.at("e4")
+        );
+
+        assertEquals(
+                Square.at("e3"),
+                movedBoard.enPassantTarget()
+        );
+    }
+
 
 }

@@ -129,7 +129,28 @@ public class Board {
             }
         }
 
-        return new Board(newPieces, newRights);
+        Square newEnPassantTarget = null;
+
+        if (piece != null &&
+                piece.type() == PieceType.Pawn &&
+                Math.abs(to.rank().getValue() -
+                        from.rank().getValue()) == 2) {
+
+            int middleRank =
+                    (from.rank().getValue() +
+                            to.rank().getValue()) / 2;
+
+            newEnPassantTarget = new Square(
+                    from.file(),
+                    Rank.values()[middleRank - 1]
+            );
+        }
+
+        return new Board(
+                newPieces,
+                newRights,
+                newEnPassantTarget
+        );
     }
 
 
@@ -234,6 +255,33 @@ public class Board {
         if (!reachesLastRank && promotionPiece != null) {
             throw new IllegalArgumentException(
                     "Promotion is only allowed on the last rank");
+        }
+
+        // en passant capture
+        boolean isEnPassant =
+                movingPiece.type() == PieceType.Pawn &&
+                        to.equals(enPassantTarget) &&
+                        from.file() != to.file() &&
+                        pieceAt(to) == null;
+
+        if (isEnPassant) {
+            Map<Square, Piece> updatedPieces =
+                    new HashMap<>(pieces);
+
+            updatedPieces.remove(from);
+
+            Square capturedPawnSquare = new Square(
+                    to.file(),
+                    from.rank()
+            );
+
+            updatedPieces.remove(capturedPawnSquare);
+            updatedPieces.put(to, movingPiece);
+
+            return new Board(
+                    updatedPieces,
+                    castlingRights
+            );
         }
 
         Board movedBoard = move(from, to);

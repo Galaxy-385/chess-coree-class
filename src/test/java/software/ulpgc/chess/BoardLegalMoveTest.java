@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import java.util.Map;
 
 public class BoardLegalMoveTest {
 
@@ -47,5 +48,53 @@ public class BoardLegalMoveTest {
         assertEquals(Piece.WhiteKnight,
                 board.pieceAt(Square.at("b1")));
         assertNull(board.pieceAt(Square.at("c3")));
+    }
+
+    @Test
+    void enPassantCaptureRemovesCapturedPawn() {
+        Board board = new Board(Map.of(
+                Square.at("e5"), Piece.WhitePawn,
+                Square.at("d5"), Piece.BlackPawn
+        ), CastlingRights.initial());
+
+        // simulate the target created by black's two-square move
+        board = new Board(
+                Map.of(
+                        Square.at("e5"), Piece.WhitePawn,
+                        Square.at("d5"), Piece.BlackPawn
+                ),
+                CastlingRights.initial(),
+                Square.at("d6")
+        );
+
+        Board result = board.legalMove(
+                Square.at("e5"),
+                Square.at("d6")
+        );
+
+        assertEquals(Piece.WhitePawn, result.pieceAt(Square.at("d6")));
+        assertNull(result.pieceAt(Square.at("e5")));
+        assertNull(result.pieceAt(Square.at("d5")));
+    }
+
+    @Test
+    void whitePawnCanCaptureEnPassant() {
+        Board board = new Board(
+                Map.of(
+                        Square.at("e5"), Piece.WhitePawn,
+                        Square.at("d5"), Piece.BlackPawn
+                ),
+                CastlingRights.initial(),
+                Square.at("d6")
+        );
+
+        Board result = board.legalMove(
+                Square.at("e5"),
+                Square.at("d6")
+        );
+
+        assertEquals(Piece.WhitePawn, result.pieceAt(Square.at("d6")));
+        assertNull(result.pieceAt(Square.at("d5")));
+        assertNull(result.pieceAt(Square.at("e5")));
     }
 }

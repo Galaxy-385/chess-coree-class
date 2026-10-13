@@ -235,7 +235,17 @@ public class Board {
             );
 
             Board kingMoved = move(from, to);
-            return kingMoved.move(rookFrom, rookTo);
+            Board castledBoard = kingMoved.move(rookFrom, rookTo);
+
+            CheckDetector checkDetector = new CheckDetector();
+
+            if (checkDetector.isInCheck(castledBoard, movingPiece.color())) {
+                throw new IllegalArgumentException(
+                        "Illegal move: king would be in check"
+                );
+            }
+
+            return castledBoard;
         }
 
         boolean reachesLastRank =
@@ -278,10 +288,17 @@ public class Board {
             updatedPieces.remove(capturedPawnSquare);
             updatedPieces.put(to, movingPiece);
 
-            return new Board(
-                    updatedPieces,
-                    castlingRights
-            );
+            Board movedBoard = new Board(updatedPieces, castlingRights);
+
+            CheckDetector checkDetector = new CheckDetector();
+
+            if (checkDetector.isInCheck(movedBoard, movingPiece.color())) {
+                throw new IllegalArgumentException(
+                        "Illegal move: king would be in check"
+                );
+            }
+
+            return movedBoard;
         }
 
         Board movedBoard = move(from, to);
@@ -292,7 +309,19 @@ public class Board {
 
             updatedPieces.put(to, promotionPiece);
 
-            return new Board(updatedPieces, movedBoard.castlingRights);
+            movedBoard = new Board(
+                    updatedPieces,
+                    movedBoard.castlingRights,
+                    movedBoard.enPassantTarget
+            );
+        }
+
+        CheckDetector checkDetector = new CheckDetector();
+
+        if (checkDetector.isInCheck(movedBoard, movingPiece.color())) {
+            throw new IllegalArgumentException(
+                    "Illegal move: king would be in check"
+            );
         }
 
         return movedBoard;

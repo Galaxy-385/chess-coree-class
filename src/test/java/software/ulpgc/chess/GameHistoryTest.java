@@ -62,4 +62,18 @@ class GameHistoryTest {
         assertEquals(2, history.occurrences(board, Color.White));
         assertEquals(1, history.occurrences(board, Color.Black));
     }
+
+    @Test
+    void shouldDetectThreefoldRepetitionDuringGame() {
+        Game game = new Game();
+
+        for (int i = 0; i < 2; i++) {
+            game.move(Square.at("g1"), Square.at("f3"));
+            game.move(Square.at("g8"), Square.at("f6"));
+            game.move(Square.at("f3"), Square.at("g1"));
+            game.move(Square.at("f6"), Square.at("g8"));
+        }
+
+        assertTrue(game.isThreefoldRepetition());
+    }
 }

@@ -204,6 +204,12 @@ public class Board {
 
         MovementRules rules = new MovementRules();
 
+        Piece targetPiece = pieceAt(to);
+
+        if(targetPiece == WhiteKing || targetPiece == BlackKing) {
+            throw new IllegalArgumentException("Illegal move: Kings cannot be captured");
+        }
+
         if (!rules.canMove(this, from, to)) {
             throw new IllegalArgumentException("Illegal move");
         }

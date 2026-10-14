@@ -152,4 +152,17 @@ public class BoardLegalMoveTest {
                 board.legalMove(Square.at("e2"), Square.at("f2"))
         );
     }
+
+    @Test
+    void shouldNotAllowCapturingEnemyKing() {
+        Board board = new Board(Map.of(
+                Square.at("e1"), Piece.WhiteKing,
+                Square.at("e2"), Piece.WhiteRook,
+                Square.at("e8"), Piece.BlackKing
+        ));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                board.legalMove(Square.at("e2"), Square.at("e8"))
+        );
+    }
 }

@@ -77,4 +77,58 @@ public class GameTest {
         );
         assertFalse(game.isThreefoldRepetition());
     }
+
+    @Test
+    void shouldAllowCustomInitialTurn() {
+        Board board = Board.initial();
+
+        Game game = new Game(board, Color.Black);
+
+        assertEquals(Color.Black, game.turn());
+        assertEquals(
+                Piece.WhiteKing,
+                game.board().pieceAt(Square.at("e1"))
+        );
+    }
+
+
+    @Test
+    void shouldAllowBlackToMoveWhenBlackStarts() {
+        Game game = new Game(Board.initial(), Color.Black);
+
+        game.move(
+                Square.at("e7"),
+                Square.at("e5")
+        );
+
+        assertEquals(Color.White, game.turn());
+        assertEquals(
+                Piece.BlackPawn,
+                game.board().pieceAt(Square.at("e5"))
+        );
+        assertEquals(
+                null,
+                game.board().pieceAt(Square.at("e7"))
+        );
+    }
+
+
+    @Test
+    void shouldAlternateTurnsAfterEachMove() {
+        Game game = new Game();
+
+        game.move(
+                Square.at("e2"),
+                Square.at("e4")
+        );
+
+        assertEquals(Color.Black, game.turn());
+
+        game.move(
+                Square.at("e7"),
+                Square.at("e5")
+        );
+
+        assertEquals(Color.White, game.turn());
+    }
 }

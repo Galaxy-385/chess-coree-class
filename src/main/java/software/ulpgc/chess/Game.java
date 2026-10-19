@@ -56,6 +56,21 @@ public class Game {
     }
 
 
+    public boolean isCheckmate(){
+        CheckmateDetector checkmateDetector = new CheckmateDetector();
+        return checkmateDetector.isCheckmate(board, turn);
+    }
+
+    public boolean isStalemate(){
+        StalemateDetector stalemateDetector = new StalemateDetector();
+        return stalemateDetector.isStalemate(board, turn);
+    }
+
+    public boolean isDraw(){
+        DrawDetector drawDetector = new DrawDetector();
+        return drawDetector.isDraw(board, turn) || isThreefoldRepetition();
+    }
+
     public void move(Square from, Square to, Piece promotionPiece){
         Piece piece = board.pieceAt(from);
 

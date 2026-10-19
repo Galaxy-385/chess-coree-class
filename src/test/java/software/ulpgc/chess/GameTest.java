@@ -131,4 +131,57 @@ public class GameTest {
 
         assertEquals(Color.White, game.turn());
     }
+
+
+    @Test
+    void shouldDetectCheckmate() {
+        Board board = Board.initial();
+
+        Game game = new Game(board);
+
+        assertEquals(false, game.isCheckmate());
+    }
+
+
+    @Test
+    void shouldDetectCheckmateWhenBlackIsCheckmated() {
+        Map<Square, Piece> pieces = new HashMap<>();
+
+        pieces.put(Square.at("f6"), Piece.WhiteKing);
+        pieces.put(Square.at("g7"), Piece.WhiteQueen);
+        pieces.put(Square.at("h8"), Piece.BlackKing);
+
+        Board board = new Board(pieces);
+        Game game = new Game(board, Color.Black);
+
+        assertEquals(true, game.isCheckmate());
+    }
+
+    @Test
+    void shouldDetectStalemate() {
+        Map<Square, Piece> pieces = new HashMap<>();
+
+        pieces.put(Square.at("f7"), Piece.WhiteKing);
+        pieces.put(Square.at("g6"), Piece.WhiteQueen);
+        pieces.put(Square.at("h8"), Piece.BlackKing);
+
+        Board board = new Board(pieces);
+        Game game = new Game(board, Color.Black);
+
+        assertEquals(true, game.isStalemate());
+    }
+
+
+    @Test
+    void shouldDetectDrawByInsufficientMaterial() {
+        Map<Square, Piece> pieces = new HashMap<>();
+
+        pieces.put(Square.at("e1"), Piece.WhiteKing);
+        pieces.put(Square.at("e8"), Piece.BlackKing);
+
+        Board board = new Board(pieces);
+        Game game = new Game(board);
+
+        assertEquals(true, game.isDraw());
+    }
 }

@@ -1,3 +1,4 @@
+
 package software.ulpgc.chess;
 
 public class MaterialDrawDetector {
@@ -7,6 +8,7 @@ public class MaterialDrawDetector {
         int knights = 0;
         int otherPieces = 0;
         int kings = 0;
+
         Square firstBishopSquare = null;
         Square secondBishopSquare = null;
 
@@ -45,17 +47,14 @@ public class MaterialDrawDetector {
 
         int minorPieces = bishops + knights;
 
-        // solo quedan los dos reyes
         if (minorPieces == 0) {
             return true;
         }
 
-        // rey contra rey y un alfil o caballo
         if (minorPieces == 1) {
             return true;
         }
 
-        // un alfil por bando, ambos en casillas del mismo color
         if (bishops == 2 && knights == 0) {
             return isSameSquareColor(
                     firstBishopSquare,

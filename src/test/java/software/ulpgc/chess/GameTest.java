@@ -184,4 +184,70 @@ public class GameTest {
 
         assertEquals(true, game.isDraw());
     }
+
+    @Test
+    void shouldRejectMovesAfterCheckmate() {
+        Map<Square, Piece> pieces = new HashMap<>();
+        pieces.put(Square.at("f6"), Piece.WhiteKing);
+        pieces.put(Square.at("g7"), Piece.WhiteQueen);
+        pieces.put(Square.at("h8"), Piece.BlackKing);
+
+        Game game = new Game(new Board(pieces), Color.Black);
+
+        assertTrue(game.isCheckmate());
+        assertTrue(game.isGameOver());
+
+        assertThrows(IllegalStateException.class, () ->
+                game.move(Square.at("h8"), Square.at("h7"))
+        );
+    }
+
+    @Test
+    void shouldRejectMovesAfterStalemate() {
+        Map<Square, Piece> pieces = new HashMap<>();
+        pieces.put(Square.at("f7"), Piece.WhiteKing);
+        pieces.put(Square.at("g6"), Piece.WhiteQueen);
+        pieces.put(Square.at("h8"), Piece.BlackKing);
+
+        Game game = new Game(new Board(pieces), Color.Black);
+
+        assertTrue(game.isStalemate());
+        assertTrue(game.isGameOver());
+
+        assertThrows(IllegalStateException.class, () ->
+                game.move(Square.at("h8"), Square.at("h7"))
+        );
+    }
+
+    @Test
+    void shouldRejectMovesAfterDrawByInsufficientMaterial() {
+        Map<Square, Piece> pieces = new HashMap<>();
+        pieces.put(Square.at("e1"), Piece.WhiteKing);
+        pieces.put(Square.at("e8"), Piece.BlackKing);
+
+        Game game = new Game(new Board(pieces));
+
+        assertTrue(game.isDraw());
+        assertTrue(game.isGameOver());
+
+        assertThrows(IllegalStateException.class, () ->
+                game.move(Square.at("e1"), Square.at("e2"))
+        );
+    }
+
+    @Test
+    void shouldNotChangeTurnWhenMoveIsRejectedAfterGameOver() {
+        Map<Square, Piece> pieces = new HashMap<>();
+        pieces.put(Square.at("e1"), Piece.WhiteKing);
+        pieces.put(Square.at("e8"), Piece.BlackKing);
+
+        Game game = new Game(new Board(pieces));
+        Color originalTurn = game.turn();
+
+        assertThrows(IllegalStateException.class, () ->
+                game.move(Square.at("e1"), Square.at("e2"))
+        );
+
+        assertEquals(originalTurn, game.turn());
+    }
 }

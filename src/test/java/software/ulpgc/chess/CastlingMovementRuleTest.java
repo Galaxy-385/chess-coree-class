@@ -138,4 +138,37 @@ public class CastlingMovementRuleTest {
         ));
     }
 
+
+
+    @Test
+    void cannotCastleToAttackedSquare() {
+        Board board = new Board(Map.of(
+                Square.at("e1"), Piece.WhiteKing,
+                Square.at("h1"), Piece.WhiteRook,
+                Square.at("g8"), Piece.BlackRook
+        ));
+
+        assertFalse(rule.canMove(
+                board, Square.at("e1"), Square.at("g1")
+        ));
+    }
+
+
+    @Test
+    void cannotCastleIfRookHasLostCastlingRights() {
+        Board board = new Board(
+                Map.of(
+                        Square.at("e1"), Piece.WhiteKing,
+                        Square.at("h1"), Piece.WhiteRook
+                ),
+                CastlingRights.initial().withoutWhiteKingSide()
+        );
+
+        assertFalse(rule.canMove(
+                board, Square.at("e1"), Square.at("g1")
+        ));
+    }
+
+
+
 }

@@ -165,4 +165,70 @@ public class BoardLegalMoveTest {
                 board.legalMove(Square.at("e2"), Square.at("e8"))
         );
     }
+
+
+    @Test
+    void shouldRejectEnPassantWhenItLeavesKingInCheck() {
+        Board board = new Board(
+                Map.of(
+                        Square.at("a5"), Piece.WhiteKing,
+                        Square.at("h5"), Piece.BlackRook,
+                        Square.at("e5"), Piece.WhitePawn,
+                        Square.at("d5"), Piece.BlackPawn,
+                        Square.at("h8"), Piece.BlackKing
+                ),
+                CastlingRights.initial(),
+                Square.at("d6")
+        );
+
+        assertThrows(IllegalArgumentException.class, () ->
+                board.legalMove(
+                        Square.at("e5"),
+                        Square.at("d6")
+                )
+        );
+    }
+
+
+    @Test
+    void shouldRejectEnPassantWhenCapturedPawnDoesNotExist() {
+        Board board = new Board(
+                Map.of(
+                        Square.at("e5"), Piece.WhitePawn,
+                        Square.at("h8"), Piece.BlackKing,
+                        Square.at("a1"), Piece.WhiteKing
+                ),
+                CastlingRights.initial(),
+                Square.at("d6")
+        );
+
+        assertThrows(IllegalArgumentException.class, () ->
+                board.legalMove(
+                        Square.at("e5"),
+                        Square.at("d6")
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectEnPassantWhenTargetSquareIsOccupied() {
+        Board board = new Board(
+                Map.of(
+                        Square.at("e5"), Piece.WhitePawn,
+                        Square.at("d5"), Piece.BlackPawn,
+                        Square.at("d6"), Piece.WhiteKnight,
+                        Square.at("h8"), Piece.BlackKing,
+                        Square.at("a1"), Piece.WhiteKing
+                ),
+                CastlingRights.initial(),
+                Square.at("d6")
+        );
+
+        assertThrows(IllegalArgumentException.class, () ->
+                board.legalMove(
+                        Square.at("e5"),
+                        Square.at("d6")
+                )
+        );
+    }
 }

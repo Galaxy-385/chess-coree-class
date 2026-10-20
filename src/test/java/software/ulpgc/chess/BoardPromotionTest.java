@@ -72,4 +72,66 @@ public class BoardPromotionTest {
                 )
         );
     }
+
+
+    @Test
+    void whitePawnCanPromoteToRook() {
+        Board board = new Board(Map.of(
+                Square.at("a7"), Piece.WhitePawn
+        ));
+
+        Board result = board.legalMove(
+                Square.at("a7"),
+                Square.at("a8"),
+                Piece.WhiteRook
+        );
+
+        assertEquals(Piece.WhiteRook, result.pieceAt(Square.at("a8")));
+    }
+
+    @Test
+    void blackPawnCanPromoteToQueen() {
+        Board board = new Board(Map.of(
+                Square.at("a2"), Piece.BlackPawn
+        ));
+
+        Board result = board.legalMove(
+                Square.at("a2"),
+                Square.at("a1"),
+                Piece.BlackQueen
+        );
+
+        assertEquals(Piece.BlackQueen, result.pieceAt(Square.at("a1")));
+        assertNull(result.pieceAt(Square.at("a2")));
+    }
+
+    @Test
+    void pawnCannotPromoteToPawn() {
+        Board board = new Board(Map.of(
+                Square.at("a7"), Piece.WhitePawn
+        ));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                board.legalMove(
+                        Square.at("a7"),
+                        Square.at("a8"),
+                        Piece.WhitePawn
+                )
+        );
+    }
+
+    @Test
+    void promotionIsRejectedBeforeLastRank() {
+        Board board = new Board(Map.of(
+                Square.at("a6"), Piece.WhitePawn
+        ));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                board.legalMove(
+                        Square.at("a6"),
+                        Square.at("a7"),
+                        Piece.WhiteQueen
+                )
+        );
+    }
 }

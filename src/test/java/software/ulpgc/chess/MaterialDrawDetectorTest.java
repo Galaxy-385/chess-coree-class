@@ -86,4 +86,70 @@ class MaterialDrawDetectorTest {
 
         assertFalse(detector.isInsufficientMaterial(board));
     }
+
+
+
+    @Test
+    void shouldNotDetectDrawWithBishopsOnDifferentColorSquares() {
+        Board board = new Board(Map.of(
+                Square.at("e1"), Piece.WhiteKing,
+                Square.at("e8"), Piece.BlackKing,
+                Square.at("c1"), Piece.WhiteBishop,
+                Square.at("c8"), Piece.BlackBishop
+        ));
+
+        MaterialDrawDetector detector = new MaterialDrawDetector();
+
+        assertFalse(detector.isInsufficientMaterial(board));
+    }
+
+
+
+    @Test
+    void shouldNotDetectInsufficientMaterialWithBishopAgainstKnight() {
+        Board board = new Board(Map.of(
+                Square.at("e1"), Piece.WhiteKing,
+                Square.at("e8"), Piece.BlackKing,
+                Square.at("c1"), Piece.WhiteBishop,
+                Square.at("f6"), Piece.BlackKnight
+        ));
+
+        MaterialDrawDetector detector = new MaterialDrawDetector();
+
+        assertFalse(detector.isInsufficientMaterial(board));
+    }
+
+
+
+    @Test
+    void shouldNotDetectInsufficientMaterialWithTwoBishopsAgainstKing() {
+        Board board = new Board(Map.of(
+                Square.at("e1"), Piece.WhiteKing,
+                Square.at("e8"), Piece.BlackKing,
+                Square.at("c1"), Piece.WhiteBishop,
+                Square.at("f1"), Piece.WhiteBishop
+        ));
+
+        MaterialDrawDetector detector = new MaterialDrawDetector();
+
+        assertFalse(detector.isInsufficientMaterial(board));
+    }
+
+
+    @Test
+    void shouldNotDetectInsufficientMaterialWithTwoKnightsAgainstKingAndPawn() {
+        Board board = new Board(Map.of(
+                Square.at("e1"), Piece.WhiteKing,
+                Square.at("e8"), Piece.BlackKing,
+                Square.at("c2"), Piece.WhiteKnight,
+                Square.at("f2"), Piece.WhiteKnight,
+                Square.at("a7"), Piece.BlackPawn
+        ));
+
+        MaterialDrawDetector detector = new MaterialDrawDetector();
+
+        assertFalse(detector.isInsufficientMaterial(board));
+    }
+
+
 }

@@ -16,7 +16,6 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-
 import java.util.List;
 import java.util.Optional;
 

@@ -54,4 +54,5 @@ public class StalemateDetector {
 
         return false;
     }
+
 }

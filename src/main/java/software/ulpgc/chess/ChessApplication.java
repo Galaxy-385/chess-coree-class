@@ -15,22 +15,27 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.scene.layout.StackPane;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
+import javafx.scene.layout.HBox;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class ChessApplication extends Application {
 
     private Game game;
+
     private final Button[][] squares = new Button[8][8];
 
     private Square selectedSquare;
     private Label turnLabel;
     private Label messageLabel;
+
+    private final Set<Square> legalDestinations = new HashSet<>();
+    private final Set<Square> captureDestinations = new HashSet<>();
 
     @Override
     public void start(Stage stage) {
@@ -101,9 +106,11 @@ public class ChessApplication extends Application {
         Label help = new Label(
                 "HOW TO PLAY\n\n"
                         + "1. Click one of your pieces.\n\n"
-                        + "2. Click the destination square.\n\n"
-                        + "3. The game checks whether the move is legal."
+                        + "2. Green squares show legal moves.\n\n"
+                        + "3. Red squares show captures.\n\n"
+                        + "4. Click a destination to move."
         );
+
         help.getStyleClass().add("help-text");
         help.setWrapText(true);
 
@@ -173,52 +180,44 @@ public class ChessApplication extends Application {
         Piece clickedPiece = game.board().pieceAt(clickedSquare);
 
         if (selectedSquare == null) {
-            if (clickedPiece != null
-                    && clickedPiece.color() == game.turn()) {
-
-                selectedSquare = clickedSquare;
-                messageLabel.setText(
-                        "Selected " + clickedSquare
-                                + ". Choose a destination."
-                );
-                refreshBoard();
-            } else {
-                messageLabel.setText(
-                        "Select a piece of the current player."
-                );
-            }
-
+            selectPiece(clickedSquare, clickedPiece);
             return;
         }
 
         if (selectedSquare.equals(clickedSquare)) {
-            selectedSquare = null;
+            clearSelection();
             messageLabel.setText("Selection cancelled.");
             refreshBoard();
             return;
         }
 
+        // selecting another piece of the current player
         if (clickedPiece != null
                 && clickedPiece.color() == game.turn()) {
 
-            selectedSquare = clickedSquare;
-            messageLabel.setText("Piece selected.");
-            refreshBoard();
+            selectPiece(clickedSquare, clickedPiece);
+            return;
+        }
+
+        // only attempt moves to calculated legal destinations
+        if (!legalDestinations.contains(clickedSquare)) {
+            messageLabel.setText("That move is not legal.");
             return;
         }
 
         try {
-            Piece movingPiece =
-                    game.board().pieceAt(selectedSquare);
-
+            Piece movingPiece = game.board().pieceAt(selectedSquare);
             Piece promotionPiece = null;
 
             boolean promotes =
                     movingPiece.type() == PieceType.Pawn
-                            && ((movingPiece.color() == Color.White
-                            && clickedSquare.rank() == Rank.R8)
-                            || (movingPiece.color() == Color.Black
-                            && clickedSquare.rank() == Rank.R1));
+                            && (
+                            (movingPiece.color() == Color.White
+                                    && clickedSquare.rank() == Rank.R8)
+                                    ||
+                                    (movingPiece.color() == Color.Black
+                                            && clickedSquare.rank() == Rank.R1)
+                    );
 
             if (promotes) {
                 Optional<Piece> choice =
@@ -226,7 +225,7 @@ public class ChessApplication extends Application {
 
                 if (choice.isEmpty()) {
                     messageLabel.setText("Promotion cancelled.");
-                    selectedSquare = null;
+                    clearSelection();
                     refreshBoard();
                     return;
                 }
@@ -244,46 +243,169 @@ public class ChessApplication extends Application {
                 );
             }
 
-            selectedSquare = null;
+            clearSelection();
             refreshBoard();
             updateGameStatus();
 
         } catch (IllegalArgumentException | IllegalStateException exception) {
             messageLabel.setText("That move is not legal.");
-            selectedSquare = null;
+            clearSelection();
             refreshBoard();
         }
     }
 
-    private Optional<Piece> choosePromotion(Color color) {
-        List<Piece> choices;
-
-        if (color == Color.White) {
-            choices = List.of(
-                    Piece.WhiteQueen,
-                    Piece.WhiteRook,
-                    Piece.WhiteBishop,
-                    Piece.WhiteKnight
+    private void selectPiece(Square square, Piece piece) {
+        if (piece == null || piece.color() != game.turn()) {
+            messageLabel.setText(
+                    "Select a piece of the current player."
             );
-        } else {
-            choices = List.of(
-                    Piece.BlackQueen,
-                    Piece.BlackRook,
-                    Piece.BlackBishop,
-                    Piece.BlackKnight
-            );
+            return;
         }
 
-        ChoiceDialog<Piece> dialog =
-                new ChoiceDialog<>(choices.get(0), choices);
+        selectedSquare = square;
+        calculateLegalDestinations(square);
+
+        messageLabel.setText(
+                "Selected " + square + ". Choose a destination."
+        );
+
+        refreshBoard();
+    }
+
+    private void calculateLegalDestinations(Square from) {
+        legalDestinations.clear();
+        captureDestinations.clear();
+
+        Board board = game.board();
+        Piece selectedPiece = board.pieceAt(from);
+
+        if (selectedPiece == null) {
+            return;
+        }
+
+        for (File file : File.values()) {
+            for (Rank rank : Rank.values()) {
+                Square to = new Square(file, rank);
+
+                if (from.equals(to)) {
+                    continue;
+                }
+
+                Piece promotionPiece = null;
+
+                // use a queen to validate a pawn's last-rank move
+                if (selectedPiece.type() == PieceType.Pawn
+                        && (
+                        (selectedPiece.color() == Color.White
+                                && to.rank() == Rank.R8)
+                                ||
+                                (selectedPiece.color() == Color.Black
+                                        && to.rank() == Rank.R1)
+                )) {
+                    promotionPiece = selectedPiece.color() == Color.White
+                            ? Piece.WhiteQueen
+                            : Piece.BlackQueen;
+                }
+
+                try {
+                    // legalMove returns a new board; it does not change this one
+                    board.legalMove(from, to, promotionPiece);
+
+                    legalDestinations.add(to);
+
+                    Piece target = board.pieceAt(to);
+
+                    boolean isEnPassant =
+                            selectedPiece.type() == PieceType.Pawn
+                                    && to.equals(board.enPassantTarget())
+                                    && from.file() != to.file()
+                                    && target == null;
+
+                    if ((target != null
+                            && target.color() != selectedPiece.color())
+                            || isEnPassant) {
+                        captureDestinations.add(to);
+                    }
+
+                } catch (IllegalArgumentException exception) {
+                    // this destination is not legal
+                }
+            }
+        }
+    }
+
+    private void clearSelection() {
+        selectedSquare = null;
+        legalDestinations.clear();
+        captureDestinations.clear();
+    }
+
+    private Optional<Piece> choosePromotion(Color color) {
+        List<Piece> choices = color == Color.White
+                ? List.of(
+                Piece.WhiteQueen,
+                Piece.WhiteRook,
+                Piece.WhiteBishop,
+                Piece.WhiteKnight
+        )
+                : List.of(
+                Piece.BlackQueen,
+                Piece.BlackRook,
+                Piece.BlackBishop,
+                Piece.BlackKnight
+        );
+
+        Dialog<Piece> dialog = new Dialog<>();
 
         dialog.setTitle("Pawn promotion");
-        dialog.setHeaderText("Choose your new piece");
-        dialog.setContentText("Promote to:");
+        dialog.setHeaderText(null);
 
         dialog.getDialogPane().getStylesheets().add(
                 getClass().getResource("chess.css").toExternalForm()
         );
+
+        dialog.getDialogPane().getStyleClass().add("promotion-dialog");
+
+        Label title = new Label("PROMOTE YOUR PAWN");
+        title.getStyleClass().add("promotion-title");
+
+        Label subtitle = new Label("Choose the piece you want");
+        subtitle.getStyleClass().add("promotion-subtitle");
+
+        HBox pieceOptions = new HBox(12);
+        pieceOptions.setAlignment(Pos.CENTER);
+
+        final Piece[] selectedPiece = {choices.get(0)};
+
+        for (Piece piece : choices) {
+            Button option = new Button();
+            option.getStyleClass().add("promotion-option");
+            option.setGraphic(PieceSprite.create(piece));
+            option.setPrefSize(88, 88);
+
+            Label name = new Label(piece.type().toString());
+            name.getStyleClass().add("promotion-piece-name");
+
+            VBox optionBox = new VBox(6, option, name);
+            optionBox.setAlignment(Pos.CENTER);
+
+            option.setOnAction(event -> {
+                selectedPiece[0] = piece;
+                dialog.setResult(piece);
+                dialog.close();
+            });
+
+            pieceOptions.getChildren().add(optionBox);
+        }
+
+        VBox content = new VBox(18, title, subtitle, pieceOptions);
+        content.setAlignment(Pos.CENTER);
+        content.setPadding(new Insets(24));
+
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+
+        dialog.setResultConverter(buttonType -> null);
 
         return dialog.showAndWait();
     }
@@ -304,7 +426,12 @@ public class ChessApplication extends Application {
 
                 button.getStyleClass().removeAll(
                         "white-piece",
-                        "black-piece"
+                        "black-piece",
+                        "light-square",
+                        "dark-square",
+                        "selected-square",
+                        "legal-destination",
+                        "capture-destination"
                 );
 
                 if (piece != null) {
@@ -315,12 +442,6 @@ public class ChessApplication extends Application {
                     );
                 }
 
-                button.getStyleClass().removeAll(
-                        "light-square",
-                        "dark-square",
-                        "selected-square"
-                );
-
                 boolean light = (row + column) % 2 == 0;
 
                 button.getStyleClass().add(
@@ -329,6 +450,10 @@ public class ChessApplication extends Application {
 
                 if (square.equals(selectedSquare)) {
                     button.getStyleClass().add("selected-square");
+                } else if (captureDestinations.contains(square)) {
+                    button.getStyleClass().add("capture-destination");
+                } else if (legalDestinations.contains(square)) {
+                    button.getStyleClass().add("legal-destination");
                 }
 
                 button.setAccessibleText(
@@ -354,23 +479,6 @@ public class ChessApplication extends Application {
         return new Square(file, rank);
     }
 
-    private String symbolFor(Piece piece) {
-        return switch (piece) {
-            case WhiteKing -> "♔";
-            case WhiteQueen -> "♕";
-            case WhiteRook -> "♖";
-            case WhiteBishop -> "♗";
-            case WhiteKnight -> "♘";
-            case WhitePawn -> "♙";
-            case BlackKing -> "♚";
-            case BlackQueen -> "♛";
-            case BlackRook -> "♜";
-            case BlackBishop -> "♝";
-            case BlackKnight -> "♞";
-            case BlackPawn -> "♟";
-        };
-    }
-
     private void updateGameStatus() {
         if (game.isCheckmate()) {
             turnLabel.setText("Checkmate");
@@ -394,39 +502,12 @@ public class ChessApplication extends Application {
 
     private void newGame() {
         game = new Game();
-        selectedSquare = null;
+        clearSelection();
         messageLabel.setText("New game started.");
         refreshBoard();
     }
 
     public static void main(String[] args) {
         launch(args);
-    }
-
-    private StackPane pieceGraphic(Piece piece) {
-        Text text = new Text(symbolFor(piece));
-
-        boolean white = piece.color() == Color.White;
-
-        text.setFont(Font.font("DejaVu Sans", FontWeight.BOLD, 52));
-
-        text.setFill(
-                white
-                        ? javafx.scene.paint.Color.web("#fff4d6")
-                        : javafx.scene.paint.Color.web("#171717")
-        );
-
-        text.setStroke(
-                white
-                        ? javafx.scene.paint.Color.web("#171717")
-                        : javafx.scene.paint.Color.web("#fff4d6")
-        );
-
-        text.setStrokeWidth(1.5);
-
-        StackPane pane = new StackPane(text);
-        pane.setMouseTransparent(true);
-
-        return pane;
     }
 }

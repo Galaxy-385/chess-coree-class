@@ -353,4 +353,6 @@ public class Board {
         return castlingRights;
     }
 
+
+
 }

@@ -117,4 +117,5 @@ public class Game {
     public boolean isGameOver() {
         return isCheckmate() || isDraw();
     }
+
 }

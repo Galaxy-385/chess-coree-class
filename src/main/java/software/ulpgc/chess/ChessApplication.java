@@ -15,6 +15,10 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
 
 import java.util.List;
 import java.util.Optional;
@@ -293,8 +297,9 @@ public class ChessApplication extends Application {
                 Square square = squareAt(row, column);
                 Piece piece = board.pieceAt(square);
 
-                button.setText(
-                        piece == null ? "" : symbolFor(piece)
+                button.setText("");
+                button.setGraphic(
+                        piece == null ? null : PieceSprite.create(piece)
                 );
 
                 button.getStyleClass().removeAll(
@@ -396,5 +401,32 @@ public class ChessApplication extends Application {
 
     public static void main(String[] args) {
         launch(args);
+    }
+
+    private StackPane pieceGraphic(Piece piece) {
+        Text text = new Text(symbolFor(piece));
+
+        boolean white = piece.color() == Color.White;
+
+        text.setFont(Font.font("DejaVu Sans", FontWeight.BOLD, 52));
+
+        text.setFill(
+                white
+                        ? javafx.scene.paint.Color.web("#fff4d6")
+                        : javafx.scene.paint.Color.web("#171717")
+        );
+
+        text.setStroke(
+                white
+                        ? javafx.scene.paint.Color.web("#171717")
+                        : javafx.scene.paint.Color.web("#fff4d6")
+        );
+
+        text.setStrokeWidth(1.5);
+
+        StackPane pane = new StackPane(text);
+        pane.setMouseTransparent(true);
+
+        return pane;
     }
 }

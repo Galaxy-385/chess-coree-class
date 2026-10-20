@@ -1,0 +1,122 @@
+.app-root {
+    -fx-background-color: #171b24;
+    -fx-font-family: "Segoe UI", "Arial";
+}
+
+.chess-board {
+    -fx-background-color: #242b37;
+    -fx-padding: 8;
+    -fx-background-radius: 8;
+    -fx-border-color: #343d4c;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.square {
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+    -fx-font-family: "Segoe UI Symbol", "DejaVu Sans", sans-serif;
+    -fx-font-size: 38px;
+    -fx-font-weight: normal;
+    -fx-background-insets: 0;
+}
+
+.square:hover {
+    -fx-opacity: 0.82;
+}
+
+.light-square {
+    -fx-background-color: #e8e3d8;
+    -fx-text-fill: #222936;
+}
+
+.dark-square {
+    -fx-background-color: #77917e;
+    -fx-text-fill: #101820;
+}
+
+.selected-square {
+    -fx-background-color: #e8c766;
+    -fx-border-color: #fff0a8;
+    -fx-border-width: 4;
+}
+
+.sidebar {
+    -fx-background-color: #222936;
+    -fx-background-radius: 16;
+    -fx-padding: 28;
+    -fx-spacing: 18;
+    -fx-border-color: #343d4c;
+    -fx-border-radius: 16;
+    -fx-border-width: 1;
+}
+
+.eyebrow {
+    -fx-text-fill: #a9c5ad;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.main-title {
+    -fx-text-fill: #f2f1ed;
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+}
+
+.subtitle {
+    -fx-text-fill: #a7afbc;
+    -fx-font-size: 13px;
+}
+
+.separator {
+    -fx-background-color: #3a4351;
+}
+
+.section-label {
+    -fx-text-fill: #9ca7b7;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.turn-label {
+    -fx-text-fill: #f4f0e6;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.message-label {
+    -fx-text-fill: #b9c2cf;
+    -fx-font-size: 12px;
+}
+
+.primary-button {
+    -fx-background-color: #a9c5ad;
+    -fx-text-fill: #19251d;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 9;
+    -fx-padding: 13 18;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: #c1d7c4;
+}
+
+.help-text {
+    -fx-text-fill: #a7afbc;
+    -fx-font-size: 12px;
+    -fx-line-spacing: 3px;
+}
+
+.white-piece {
+    -fx-text-fill: #fffdf5;
+    -fx-effect: dropshadow(gaussian, #202722, 2, 0.3, 1, 1);
+}
+
+.black-piece {
+    -fx-text-fill: #202722;
+}

@@ -22,6 +22,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -56,26 +57,47 @@ public class ChessApplication extends Application {
     public void start(Stage stage) {
         game = new Game();
 
-        BorderPane root = new BorderPane();
+        HBox root = new HBox(20);
         root.getStyleClass().add("app-root");
+        root.setPadding(new Insets(30));
+
+        GridPane boardView = createBoard();
+        boardView.setPrefSize(580, 580);
+        boardView.setMinSize(580, 580);
+        boardView.setMaxSize(580, 580);
+
+        StackPane boardContainer = new StackPane(boardView);
+        boardContainer.setAlignment(Pos.CENTER);
+        HBox.setHgrow(boardContainer, Priority.ALWAYS);
 
         VBox sidebar = createSidebar();
-        GridPane boardView = createBoard();
 
-        root.setCenter(boardView);
-        root.setRight(sidebar);
+        VBox futureColumn = new VBox(14);
+        futureColumn.getStyleClass().add("sidebar");
+        futureColumn.setPrefWidth(200);
+        futureColumn.setMinWidth(200);
+        futureColumn.setMaxWidth(200);
+        futureColumn.setAlignment(Pos.TOP_LEFT);
 
-        BorderPane.setMargin(boardView, new Insets(30));
-        BorderPane.setMargin(sidebar, new Insets(30, 30, 30, 0));
+        Label futureTitle = new Label("EXTRAS");
+        futureTitle.getStyleClass().add("section-label");
 
-        Scene scene = new Scene(root, 1280, 760);
+        futureColumn.getChildren().add(futureTitle);
+
+        root.getChildren().addAll(
+                boardContainer,
+                sidebar,
+                futureColumn
+        );
+
+        Scene scene = new Scene(root, 1500, 760);
 
         scene.getStylesheets().add(
                 getClass().getResource("chess.css").toExternalForm()
         );
 
         stage.setTitle("Chess");
-        stage.setMinWidth(1100);
+        stage.setMinWidth(1300);
         stage.setMinHeight(650);
         stage.setScene(scene);
         stage.show();

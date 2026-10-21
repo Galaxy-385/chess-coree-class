@@ -22,6 +22,7 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.scene.Node;
 
 import java.util.HashSet;
 import java.util.List;
@@ -76,9 +77,9 @@ public class ChessApplication extends Application {
 
         VBox leftColumn = new VBox(10);
         leftColumn.getStyleClass().add("left-column");
-        leftColumn.setPrefWidth(300);
-        leftColumn.setMinWidth(280);
-        leftColumn.setMaxWidth(300);
+        leftColumn.setPrefWidth(330);
+        leftColumn.setMinWidth(310);
+        leftColumn.setMaxWidth(330);
         leftColumn.getChildren().addAll(gameTitle, sidebar);
         VBox.setVgrow(sidebar, Priority.ALWAYS);
 
@@ -133,9 +134,9 @@ public class ChessApplication extends Application {
 
         // Ilustración situada debajo de EXTRAS.
         // El PNG debe estar en el mismo paquete de recursos que chess.css.
-        ImageView artworkView = createArtwork();
+        Node artwork = createArtwork();
 
-        StackPane artworkPanel = new StackPane(artworkView);
+        StackPane artworkPanel = new StackPane(artwork);
         artworkPanel.getStyleClass().add("artwork-panel");
         artworkPanel.setAlignment(Pos.CENTER);
         artworkPanel.setMinHeight(0);
@@ -172,23 +173,38 @@ public class ChessApplication extends Application {
         updateModeButtons();
     }
 
-    private ImageView createArtwork() {
-        var imageUrl = getClass().getResource("chess-battle.png");
+    private Node createArtwork() {
+        var imageUrl = getClass().getResource(
+                "/software/ulpgc/chess/chess-battle.png"
+        );
 
         if (imageUrl == null) {
             Label placeholder = new Label(
-                    "CHESS BATTLE\n\nAñade chess-battle.png\na la carpeta de recursos."
+                    "NO SE ENCUENTRA LA IMAGEN\n\n"
+                            + "Comprueba que chess-battle.png esté en:\n"
+                            + "src/main/resources/software/ulpgc/chess/"
             );
-            placeholder.getStyleClass().add("artwork-placeholder");
 
-            // Se muestra un aviso en lugar de bloquear el arranque
-            // si todavía no se ha copiado la ilustración.
-            ImageView emptyView = new ImageView();
-            emptyView.setVisible(false);
-            return emptyView;
+            placeholder.getStyleClass().add("artwork-placeholder");
+            placeholder.setWrapText(true);
+            placeholder.setMaxWidth(300);
+            placeholder.setAlignment(Pos.CENTER);
+
+            return placeholder;
         }
 
         Image image = new Image(imageUrl.toExternalForm());
+
+        if (image.isError()) {
+            Label error = new Label(
+                    "No se pudo cargar la imagen:\n"
+                            + image.getException()
+            );
+
+            error.getStyleClass().add("artwork-placeholder");
+            error.setWrapText(true);
+            return error;
+        }
 
         ImageView imageView = new ImageView(image);
         imageView.setPreserveRatio(true);
@@ -213,9 +229,9 @@ public class ChessApplication extends Application {
     private VBox createSidebar() {
         VBox sidebar = new VBox(12);
         sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(300);
-        sidebar.setMinWidth(280);
-        sidebar.setMaxWidth(300);
+        sidebar.setPrefWidth(330);
+        sidebar.setMinWidth(310);
+        sidebar.setMaxWidth(330);
         sidebar.setAlignment(Pos.TOP_LEFT);
 
         eyebrow = new Label("CHESS / CLASSIC");

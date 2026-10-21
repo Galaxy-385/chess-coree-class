@@ -11,6 +11,8 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -61,11 +63,26 @@ public class ChessApplication extends Application {
     public void start(Stage stage) {
         game = new Game();
 
-        HBox root = new HBox(20);
+        HBox root = new HBox(18);
         root.getStyleClass().add("app-root");
-        root.setPadding(new Insets(30));
+        root.setPadding(new Insets(24));
+        root.setAlignment(Pos.CENTER);
 
-        // Tablero
+        // IZQUIERDA: título y panel de información
+        Label gameTitle = new Label("CHESS TOGETHER");
+        gameTitle.getStyleClass().add("game-title");
+
+        VBox sidebar = createSidebar();
+
+        VBox leftColumn = new VBox(10);
+        leftColumn.getStyleClass().add("left-column");
+        leftColumn.setPrefWidth(300);
+        leftColumn.setMinWidth(280);
+        leftColumn.setMaxWidth(300);
+        leftColumn.getChildren().addAll(gameTitle, sidebar);
+        VBox.setVgrow(sidebar, Priority.ALWAYS);
+
+        // CENTRO: tablero
         GridPane boardView = createBoard();
         boardView.setPrefSize(580, 580);
         boardView.setMinSize(580, 580);
@@ -74,39 +91,27 @@ public class ChessApplication extends Application {
         StackPane boardContainer = new StackPane(boardView);
         boardContainer.setAlignment(Pos.CENTER);
 
-        // Título en la esquina superior izquierda,
-        // encima del tablero.
-        Label gameTitle = new Label("CHESS TOGETHER");
-        gameTitle.getStyleClass().add("game-title");
+        VBox boardColumn = new VBox();
+        boardColumn.getStyleClass().add("board-column");
+        boardColumn.setAlignment(Pos.CENTER);
+        boardColumn.setMinWidth(580);
+        boardColumn.getChildren().add(boardContainer);
 
-        VBox boardColumn = new VBox(10);
-        boardColumn.setAlignment(Pos.TOP_LEFT);
-        boardColumn.getChildren().addAll(gameTitle, boardContainer);
+        // DERECHA: extras y modos de juego
+        VBox extrasPanel = new VBox(14);
+        extrasPanel.getStyleClass().add("extras-panel");
+        extrasPanel.setPadding(new Insets(18));
 
-        // Panel lateral
-        VBox sidebar = createSidebar();
+        Label extrasTitle = new Label("EXTRAS");
+        extrasTitle.getStyleClass().add("section-label");
 
-        // Columna de extras
-        VBox futureColumn = new VBox(14);
-        futureColumn.getStyleClass().add("sidebar");
-        futureColumn.setPrefWidth(200);
-        futureColumn.setMinWidth(200);
-        futureColumn.setMaxWidth(200);
-        futureColumn.setAlignment(Pos.TOP_LEFT);
-
-        Label futureTitle = new Label("EXTRAS");
-        futureTitle.getStyleClass().add("section-label");
-
-        classicButton = new Button("Classic");
+        classicButton = new Button("♙   Classic");
         classicButton.getStyleClass().add("mode-button");
         classicButton.setMaxWidth(Double.MAX_VALUE);
 
-        chess960Button = new Button("Chess960");
+        chess960Button = new Button("♞   Chess960");
         chess960Button.getStyleClass().add("mode-button");
         chess960Button.setMaxWidth(Double.MAX_VALUE);
-
-        // Classic aparece seleccionado al iniciar.
-        classicButton.getStyleClass().add("mode-button-selected");
 
         classicButton.setOnAction(event -> {
             chess960Mode = false;
@@ -120,32 +125,78 @@ public class ChessApplication extends Application {
             newGame();
         });
 
-        futureColumn.getChildren().addAll(
-                futureTitle,
+        extrasPanel.getChildren().addAll(
+                extrasTitle,
                 classicButton,
                 chess960Button
         );
 
-        // Orden: tablero con título, panel lateral y extras.
+        // Ilustración situada debajo de EXTRAS.
+        // El PNG debe estar en el mismo paquete de recursos que chess.css.
+        ImageView artworkView = createArtwork();
+
+        StackPane artworkPanel = new StackPane(artworkView);
+        artworkPanel.getStyleClass().add("artwork-panel");
+        artworkPanel.setAlignment(Pos.CENTER);
+        artworkPanel.setMinHeight(0);
+        VBox.setVgrow(artworkPanel, Priority.ALWAYS);
+
+        VBox rightColumn = new VBox(0);
+        rightColumn.getStyleClass().add("right-column");
+        rightColumn.setPrefWidth(370);
+        rightColumn.setMinWidth(330);
+        rightColumn.setMaxWidth(370);
+        rightColumn.getChildren().addAll(extrasPanel, artworkPanel);
+        VBox.setVgrow(artworkPanel, Priority.ALWAYS);
+
+        // Distribución final de las tres columnas.
         root.getChildren().addAll(
+                leftColumn,
                 boardColumn,
-                sidebar,
-                futureColumn
+                rightColumn
         );
 
-        Scene scene = new Scene(root, 1500, 760);
+        Scene scene = new Scene(root, 1500, 820);
 
         scene.getStylesheets().add(
                 getClass().getResource("chess.css").toExternalForm()
         );
 
         stage.setTitle("Chess Together");
-        stage.setMinWidth(1300);
-        stage.setMinHeight(650);
+        stage.setMinWidth(1400);
+        stage.setMinHeight(760);
         stage.setScene(scene);
         stage.show();
 
         refreshBoard();
+        updateModeButtons();
+    }
+
+    private ImageView createArtwork() {
+        var imageUrl = getClass().getResource("chess-battle.png");
+
+        if (imageUrl == null) {
+            Label placeholder = new Label(
+                    "CHESS BATTLE\n\nAñade chess-battle.png\na la carpeta de recursos."
+            );
+            placeholder.getStyleClass().add("artwork-placeholder");
+
+            // Se muestra un aviso en lugar de bloquear el arranque
+            // si todavía no se ha copiado la ilustración.
+            ImageView emptyView = new ImageView();
+            emptyView.setVisible(false);
+            return emptyView;
+        }
+
+        Image image = new Image(imageUrl.toExternalForm());
+
+        ImageView imageView = new ImageView(image);
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+        imageView.setFitWidth(350);
+        imageView.setFitHeight(490);
+
+        return imageView;
     }
 
     private void updateModeButtons() {
@@ -160,11 +211,11 @@ public class ChessApplication extends Application {
     }
 
     private VBox createSidebar() {
-        VBox sidebar = new VBox(14);
+        VBox sidebar = new VBox(12);
         sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(380);
-        sidebar.setMinWidth(380);
-        sidebar.setMaxWidth(380);
+        sidebar.setPrefWidth(300);
+        sidebar.setMinWidth(280);
+        sidebar.setMaxWidth(300);
         sidebar.setAlignment(Pos.TOP_LEFT);
 
         eyebrow = new Label("CHESS / CLASSIC");
@@ -201,9 +252,11 @@ public class ChessApplication extends Application {
 
         moveHistory = new ListView<>();
         moveHistory.getStyleClass().add("move-history");
-        moveHistory.setPlaceholder(new Label("Moves will appear here"));
+        moveHistory.setPlaceholder(
+                new Label("Moves will appear here")
+        );
         moveHistory.setMaxWidth(Double.MAX_VALUE);
-        moveHistory.setMinHeight(150);
+        moveHistory.setMinHeight(130);
         VBox.setVgrow(moveHistory, Priority.ALWAYS);
 
         moveHistory.setCellFactory(list -> new ListCell<>() {
@@ -229,7 +282,6 @@ public class ChessApplication extends Application {
                 );
                 movement.getStyleClass().add("history-move");
                 movement.setWrapText(false);
-                movement.setMaxWidth(Double.MAX_VALUE);
 
                 Label details = new Label(
                         move.moveNumber()
@@ -242,7 +294,7 @@ public class ChessApplication extends Application {
                 text.setMinWidth(0);
                 HBox.setHgrow(text, Priority.ALWAYS);
 
-                HBox row = new HBox(3, pieceIcon, text);
+                HBox row = new HBox(5, pieceIcon, text);
                 row.setAlignment(Pos.CENTER_LEFT);
                 row.setPadding(new Insets(3, 4, 3, 4));
                 row.setMaxWidth(Double.MAX_VALUE);
@@ -251,8 +303,6 @@ public class ChessApplication extends Application {
                 setText(null);
             }
         });
-
-
 
         sidebar.getChildren().addAll(
                 eyebrow,
@@ -332,8 +382,7 @@ public class ChessApplication extends Application {
             return;
         }
 
-        if (clickedPiece != null
-                && clickedPiece.color() == game.turn()) {
+        if (clickedPiece != null && clickedPiece.color() == game.turn()) {
             selectPiece(clickedSquare, clickedPiece);
             return;
         }
@@ -423,9 +472,7 @@ public class ChessApplication extends Application {
         selectedSquare = square;
         calculateLegalDestinations(square);
 
-        messageLabel.setText(
-                "Selected " + square
-        );
+        messageLabel.setText("Selected " + square);
 
         refreshBoard();
     }
@@ -456,11 +503,9 @@ public class ChessApplication extends Application {
                         && to.rank() == Rank.R8)
                         || (selectedPiece.color() == Color.Black
                         && to.rank() == Rank.R1))) {
-
-                    promotionPiece =
-                            selectedPiece.color() == Color.White
-                                    ? Piece.WhiteQueen
-                                    : Piece.BlackQueen;
+                    promotionPiece = selectedPiece.color() == Color.White
+                            ? Piece.WhiteQueen
+                            : Piece.BlackQueen;
                 }
 
                 try {
@@ -510,14 +555,12 @@ public class ChessApplication extends Application {
         );
 
         Dialog<Piece> dialog = new Dialog<>();
-
         dialog.setTitle("Pawn promotion");
         dialog.setHeaderText(null);
 
         dialog.getDialogPane().getStylesheets().add(
                 getClass().getResource("chess.css").toExternalForm()
         );
-
         dialog.getDialogPane().getStyleClass().add("promotion-dialog");
 
         Label title = new Label("PROMOTE YOUR PAWN");
@@ -593,7 +636,6 @@ public class ChessApplication extends Application {
                 }
 
                 boolean light = (row + column) % 2 == 0;
-
                 button.getStyleClass().add(
                         light ? "light-square" : "dark-square"
                 );
@@ -623,7 +665,6 @@ public class ChessApplication extends Application {
     private Square squareAt(int row, int column) {
         File file = File.values()[column];
         Rank rank = Rank.values()[7 - row];
-
         return new Square(file, rank);
     }
 

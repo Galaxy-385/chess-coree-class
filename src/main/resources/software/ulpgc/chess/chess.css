@@ -1,16 +1,45 @@
+
+/* =====================================================
+   GENERAL
+   ===================================================== */
+
 .app-root {
     -fx-background-color: #171717;
     -fx-font-family: "Segoe UI", "Arial";
 }
 
-/* chess board */
+.left-column {
+    -fx-background-color: transparent;
+}
+
+.board-column {
+    -fx-background-color: transparent;
+}
+
+/* =====================================================
+   TITULO
+   ===================================================== */
+
+.game-title {
+    -fx-font-family: "Arial Black";
+    -fx-font-size: 25px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #ff303d;
+    -fx-effect: dropshadow(gaussian, #650000, 5, 0.5, 2, 3);
+    -fx-padding: 4 0 8 0;
+}
+
+/* =====================================================
+   TABLERO
+   ===================================================== */
+
 .chess-board {
     -fx-background-color: #292929;
-    -fx-padding: 8;
-    -fx-background-radius: 8;
-    -fx-border-color: #9e2028;
-    -fx-border-width: 2;
-    -fx-border-radius: 8;
+    -fx-padding: 8px;
+    -fx-background-radius: 8px;
+    -fx-border-color: #b52b35;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
 }
 
 .square {
@@ -38,89 +67,6 @@
     -fx-text-fill: #ffffff;
 }
 
-/* sidebar */
-.sidebar {
-    -fx-background-color: #222222;
-    -fx-background-radius: 16;
-    -fx-padding: 28;
-    -fx-spacing: 18;
-    -fx-border-color: #454545;
-    -fx-border-radius: 16;
-    -fx-border-width: 1;
-}
-
-/* small heading above the main title */
-.eyebrow {
-    -fx-text-fill: #ff727b;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-}
-
-/* main title */
-.main-title {
-    -fx-text-fill: #ffffff;
-    -fx-font-family: "Segoe UI";
-    -fx-font-size: 34px;
-    -fx-font-weight: bold;
-}
-
-/* subtitle */
-.subtitle {
-    -fx-text-fill: #d0d0d0;
-    -fx-font-size: 14px;
-}
-
-/* separator */
-.separator {
-    -fx-background-color: #454545;
-}
-
-/* section headings */
-.section-label {
-    -fx-text-fill: #ff727b;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-}
-
-/* current turn */
-.turn-label {
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 22px;
-    -fx-font-weight: bold;
-}
-
-/* game messages */
-.message-label {
-    -fx-text-fill: #b52b35;
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-wrap-text: true;
-}
-
-/* new game button */
-.primary-button {
-    -fx-background-color: #b52b35;
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 15px;
-    -fx-font-weight: bold;
-    -fx-background-radius: 9;
-    -fx-padding: 13 18;
-    -fx-cursor: hand;
-}
-
-.primary-button:hover {
-    -fx-background-color: #d33b46;
-}
-
-/* instructions */
-.help-text {
-    -fx-text-fill: #d0d0d0;
-    -fx-font-size: 13px;
-    -fx-line-spacing: 4px;
-    -fx-wrap-text: true;
-}
-
-/* chess pieces */
 .white-piece {
     -fx-text-fill: #fff0cf;
     -fx-effect: dropshadow(gaussian, #202722, 2, 0.3, 1, 1);
@@ -131,28 +77,222 @@
     -fx-effect: dropshadow(gaussian, #080d16, 2, 0.3, 1, 1);
 }
 
-/* selected square */
 .selected-square {
     -fx-border-color: #ffe45c;
     -fx-border-width: 4px;
     -fx-effect: dropshadow(gaussian, #ffe45c, 16, 0.7, 0, 0);
 }
 
-/* legal moves */
 .legal-destination {
     -fx-border-color: #52e878;
     -fx-border-width: 4px;
     -fx-effect: dropshadow(gaussian, #52e878, 12, 0.6, 0, 0);
 }
 
-/* captures */
 .capture-destination {
     -fx-border-color: #ff5252;
     -fx-border-width: 4px;
     -fx-effect: dropshadow(gaussian, #ff5252, 14, 0.7, 0, 0);
 }
 
-/* pawn promotion dialog */
+/* =====================================================
+   PANEL IZQUIERDO
+   ===================================================== */
+
+.sidebar {
+    -fx-background-color: #11151a;
+    -fx-background-radius: 12px;
+    -fx-padding: 18px;
+    -fx-spacing: 12px;
+    -fx-border-color: #292e35;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+}
+
+.eyebrow {
+    -fx-text-fill: #ff727b;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.main-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+}
+
+.subtitle {
+    -fx-text-fill: #b8bec7;
+    -fx-font-size: 13px;
+}
+
+.separator {
+    -fx-background-color: #343b44;
+}
+
+.section-label {
+    -fx-text-fill: #ff727b;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.turn-label {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 21px;
+    -fx-font-weight: bold;
+}
+
+.message-label {
+    -fx-text-fill: #ff727b;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-wrap-text: true;
+}
+
+/* =====================================================
+   BOTON NUEVA PARTIDA
+   ===================================================== */
+
+.primary-button {
+    -fx-background-color: #b52b35;
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 9px;
+    -fx-padding: 13px 18px;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: #d33b46;
+}
+
+/* =====================================================
+   HISTORIAL
+   ===================================================== */
+
+.move-history {
+    -fx-background-color: #1b1b1b;
+    -fx-background-radius: 10px;
+    -fx-border-color: #343b44;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 4px;
+}
+
+.move-history .virtual-flow,
+.move-history .clipped-container {
+    -fx-background-color: #1b1b1b;
+}
+
+.move-history .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 3px;
+}
+
+.move-history .list-cell:filled:odd {
+    -fx-background-color: #252a30;
+}
+
+.move-history .list-cell:filled:selected {
+    -fx-background-color: #492327;
+}
+
+.move-history .list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.move-history .placeholder .label {
+    -fx-text-fill: #aaaaaa;
+    -fx-font-size: 12px;
+}
+
+.history-move {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.history-details {
+    -fx-text-fill: #9ca3ad;
+    -fx-font-size: 10px;
+}
+
+/* =====================================================
+   PANEL DERECHO: EXTRAS
+   ===================================================== */
+
+.right-column {
+    -fx-background-color: #11151a;
+    -fx-background-radius: 12px;
+    -fx-border-color: #292e35;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-spacing: 0;
+}
+
+.extras-panel {
+    -fx-background-color: #11151a;
+    -fx-background-radius: 12px 12px 0 0;
+    -fx-padding: 18px;
+    -fx-spacing: 14px;
+}
+
+/* =====================================================
+   MODOS CLASSIC Y CHESS960
+   ===================================================== */
+
+.mode-button {
+    -fx-background-color: #20252c;
+    -fx-text-fill: #e4e7eb;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 14px;
+    -fx-background-radius: 9px;
+    -fx-border-color: #343b44;
+    -fx-border-radius: 9px;
+    -fx-border-width: 1px;
+    -fx-cursor: hand;
+}
+
+.mode-button:hover {
+    -fx-background-color: #303740;
+}
+
+.mode-button-selected {
+    -fx-background-color: #203a34;
+    -fx-text-fill: #c2f5d9;
+    -fx-border-color: #62b99b;
+    -fx-border-width: 1.5px;
+}
+
+.mode-button:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+/* =====================================================
+   ILUSTRACION
+   ===================================================== */
+
+.artwork-panel {
+    -fx-background-color: #11151a;
+    -fx-padding: 8px;
+    -fx-background-radius: 0 0 12px 12px;
+}
+
+.artwork-placeholder {
+    -fx-text-fill: #9ca3ad;
+    -fx-font-size: 13px;
+    -fx-text-alignment: center;
+}
+
+/* =====================================================
+   PROMOCION DE PEONES
+   ===================================================== */
+
 .promotion-dialog {
     -fx-background-color: #202124;
     -fx-border-color: #41444b;
@@ -205,145 +345,4 @@
 
 .promotion-dialog .button:hover {
     -fx-background-color: #484d56;
-}
-
-/* move history */
-.move-history {
-    -fx-background-color: #1b1b1b;
-    -fx-background-radius: 10px;
-    -fx-border-color: #454545;
-    -fx-border-radius: 10px;
-    -fx-border-width: 1px;
-    -fx-padding: 4px;
-}
-
-.move-history .virtual-flow,
-.move-history .clipped-container {
-    -fx-background-color: #1b1b1b;
-}
-
-.move-history .list-cell {
-    -fx-background-color: transparent;
-    -fx-padding: 4px;
-}
-
-.move-history .list-cell:filled:odd {
-    -fx-background-color: #292929;
-}
-
-.move-history .list-cell:filled:selected {
-    -fx-background-color: #492327;
-}
-
-.move-history .list-cell:empty {
-    -fx-background-color: transparent;
-}
-
-.move-history .placeholder .label {
-    -fx-text-fill: #aaaaaa;
-    -fx-font-size: 13px;
-}
-
-.history-move {
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 10px;
-    -fx-font-weight: bold;
-}
-
-.history-details {
-    -fx-text-fill: #b5b5b5;
-    -fx-font-size: 11px;
-}
-
-/* move history */
-.move-history {
-    -fx-background-color: #1b1b1b;
-    -fx-background-radius: 10px;
-    -fx-border-color: #454545;
-    -fx-border-radius: 10px;
-    -fx-border-width: 1px;
-    -fx-padding: 4px;
-}
-
-.move-history .virtual-flow,
-.move-history .clipped-container {
-    -fx-background-color: #1b1b1b;
-}
-
-.move-history .list-cell {
-    -fx-padding: 1px;
-}
-
-.move-history .list-cell:filled:odd {
-    -fx-background-color: #292929;
-}
-
-.move-history .list-cell:empty {
-    -fx-background-color: transparent;
-}
-
-.move-history .placeholder .label {
-    -fx-text-fill: #aaaaaa;
-    -fx-font-size: 13px;
-}
-
-.history-move {
-    -fx-text-fill: #ffffff;
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-}
-
-.history-details {
-    -fx-text-fill: #b5b5b5;
-    -fx-font-size: 11px;
-}
-
-.mode-button {
-    -fx-background-color: #252a30;
-    -fx-text-fill: #c5cbd3;
-    -fx-font-size: 13px;
-    -fx-alignment: CENTER_LEFT;
-    -fx-padding: 12px;
-    -fx-background-radius: 8px;
-    -fx-cursor: hand;
-}
-
-.mode-button-selected {
-    -fx-background-color: #344b40;
-    -fx-text-fill: #b9edc8;
-    -fx-border-color: #5b9273;
-    -fx-border-radius: 8px;
-    -fx-border-width: 1px;
-}
-
-.mode-button:disabled {
-    -fx-opacity: 0.45;
-    -fx-cursor: default;
-}
-
-.game-title {
-    -fx-font-family: "Arial Black";
-    -fx-font-size: 19px;
-    -fx-font-weight: 900;
-    -fx-text-fill: #ff2525;
-    -fx-effect: dropshadow(gaussian, #650000, 0, 0, 4, 4);
-    -fx-padding: 0 0 12 0;
-}
-
-.game-title {
-    -fx-font-family: "Arial Black";
-    -fx-font-size: 24px;
-    -fx-font-weight: 900;
-    -fx-text-fill: #ff2525;
-    -fx-effect: dropshadow(gaussian, #650000, 0, 0, 4, 4);
-    -fx-padding: 0 0 5 0;
-}
-
-.mode-button {
-    -fx-max-width: infinity;
-}
-
-.mode-button-selected {
-    -fx-border-color: #ff2525;
-    -fx-border-width: 1.5px;
 }

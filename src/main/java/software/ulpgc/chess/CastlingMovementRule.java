@@ -13,21 +13,35 @@ public class CastlingMovementRule implements MovementRule {
             return false;
         }
 
-        if (from.rank() != to.rank()) {
-            return false;
-        }
-
-        int fileDifference =
-                to.file().getSymbol() - from.file().getSymbol();
-
-        if (Math.abs(fileDifference) != 2) {
-            return false;
-        }
-
-        boolean kingSide = fileDifference > 0;
         CastlingRights rights = board.castlingRights();
 
-        if (king == Piece.WhiteKing) {
+        boolean white = king == Piece.WhiteKing;
+
+        Square kingStart = white
+                ? rights.whiteKingStart()
+                : rights.blackKingStart();
+
+        if (!from.equals(kingStart)) {
+            return false;
+        }
+
+        int rank = from.rank().getValue();
+
+        if (to.rank().getValue() != rank) {
+            return false;
+        }
+
+        boolean kingSide;
+
+        if (to.file() == File.G) {
+            kingSide = true;
+        } else if (to.file() == File.C) {
+            kingSide = false;
+        } else {
+            return false;
+        }
+
+        if (white) {
             if (kingSide && !rights.whiteKingSide()) {
                 return false;
             }
@@ -45,63 +59,112 @@ public class CastlingMovementRule implements MovementRule {
             }
         }
 
-        int rank = from.rank().getValue();
+        Square rookStart;
 
-        Square rookSquare = new Square(
-                kingSide ? File.H : File.A,
-                from.rank()
-        );
+        if (white) {
+            rookStart = kingSide
+                    ? rights.whiteKingRookStart()
+                    : rights.whiteQueenRookStart();
+        } else {
+            rookStart = kingSide
+                    ? rights.blackKingRookStart()
+                    : rights.blackQueenRookStart();
+        }
 
-        Piece expectedRook = king == Piece.WhiteKing
-                ? Piece.WhiteRook : Piece.BlackRook;
+        Piece expectedRook = white
+                ? Piece.WhiteRook
+                : Piece.BlackRook;
 
-        if (board.pieceAt(rookSquare) != expectedRook) {
+        if (board.pieceAt(rookStart) != expectedRook) {
             return false;
         }
 
-        int direction = kingSide ? 1 : -1;
+        int kingDestinationFile = kingSide ? 6 : 2;
+        int rookDestinationFile = kingSide ? 5 : 3;
 
-        for (int file = from.file().getSymbol() + direction;
-             file != rookSquare.file().getSymbol();
-             file += direction) {
+        int rookStartFile =
+                rookStart.file().getSymbol() - 'a';
+
+        // Las casillas del recorrido del rey deben estar libres,
+        // salvo las posiciones iniciales del rey y de la torre.
+        for (int file = Math.min(
+                from.file().getSymbol() - 'a',
+                kingDestinationFile);
+             file <= Math.max(
+                     from.file().getSymbol() - 'a',
+                     kingDestinationFile);
+             file++) {
 
             Square square = new Square(
-                    File.values()[file - 'a'],
+                    File.values()[file],
                     from.rank()
             );
 
-            if (board.pieceAt(square) != null) {
+            if (!square.equals(from) &&
+                    !square.equals(rookStart) &&
+                    board.pieceAt(square) != null) {
                 return false;
             }
         }
 
+        // Las casillas del recorrido de la torre también
+        // deben estar libres, salvo las posiciones iniciales.
+        for (int file = Math.min(
+                rookStartFile,
+                rookDestinationFile);
+             file <= Math.max(
+                     rookStartFile,
+                     rookDestinationFile);
+             file++) {
 
-        Color attackerColor =
-                king.color() == Color.White ? Color.Black : Color.White;
+            Square square = new Square(
+                    File.values()[file],
+                    from.rank()
+            );
+
+            if (!square.equals(from) &&
+                    !square.equals(rookStart) &&
+                    board.pieceAt(square) != null) {
+                return false;
+            }
+        }
+
+        Color attackerColor = white
+                ? Color.Black
+                : Color.White;
 
         AttackDetector detector = new AttackDetector();
 
-        Square middleSquare = new Square(
-                File.values()[
-                        from.file().getSymbol() - 'a' +
-                                (kingSide ? 1 : -1)
-                        ],
-                from.rank()
-        );
-
-        if (detector.isSquareAttacked(board, from, attackerColor)) {
-            return false;
-        }
-
         if (detector.isSquareAttacked(
-                board, middleSquare, attackerColor)) {
+                board, from, attackerColor)) {
             return false;
         }
 
-        if (detector.isSquareAttacked(board, to, attackerColor)) {
-            return false;
-        }
+        // Comprobar las casillas que atraviesa el rey.
+        int startFile = from.file().getSymbol() - 'a';
+        int direction = Integer.compare(
+                kingDestinationFile, startFile);
 
+        if (direction != 0) {
+            for (int file = startFile + direction;
+                    ;
+                 file += direction) {
+
+                Square square = new Square(
+                        File.values()[file],
+                        from.rank()
+                );
+
+                if (detector.isSquareAttacked(
+                        board, square, attackerColor)) {
+                    return false;
+                }
+
+                if (file == kingDestinationFile) {
+                    break;
+                }
+            }
+        }
 
         return true;
     }

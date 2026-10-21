@@ -3,6 +3,9 @@ package software.ulpgc.chess;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import static software.ulpgc.chess.Piece.*;
 import static software.ulpgc.chess.Square.at;
@@ -87,47 +90,51 @@ public class Board {
             newRights = newRights.withoutBlackCastling();
         }
 
-        // moving a rook removes its corresponding castling right
+
+        // Mover una torre desde su casilla inicial elimina
+        // el derecho de enroque correspondiente.
         if (piece == Piece.WhiteRook) {
-            if (from.equals(Square.at("a1"))) {
+            if (from.equals(castlingRights.whiteQueenRookStart())) {
                 newRights = newRights.withoutWhiteQueenSide();
             }
 
-            if (from.equals(Square.at("h1"))) {
+            if (from.equals(castlingRights.whiteKingRookStart())) {
                 newRights = newRights.withoutWhiteKingSide();
             }
         }
 
         if (piece == Piece.BlackRook) {
-            if (from.equals(Square.at("a8"))) {
+            if (from.equals(castlingRights.blackQueenRookStart())) {
                 newRights = newRights.withoutBlackQueenSide();
             }
 
-            if (from.equals(Square.at("h8"))) {
+            if (from.equals(castlingRights.blackKingRookStart())) {
                 newRights = newRights.withoutBlackKingSide();
             }
         }
 
-        // capturing a rook on its initial square removes its castling right
+        // Capturar una torre en su casilla inicial también
+        // elimina su derecho de enroque.
         if (capturedPiece == Piece.WhiteRook) {
-            if (to.equals(Square.at("a1"))) {
+            if (to.equals(castlingRights.whiteQueenRookStart())) {
                 newRights = newRights.withoutWhiteQueenSide();
             }
 
-            if (to.equals(Square.at("h1"))) {
+            if (to.equals(castlingRights.whiteKingRookStart())) {
                 newRights = newRights.withoutWhiteKingSide();
             }
         }
 
         if (capturedPiece == Piece.BlackRook) {
-            if (to.equals(Square.at("a8"))) {
+            if (to.equals(castlingRights.blackQueenRookStart())) {
                 newRights = newRights.withoutBlackQueenSide();
             }
 
-            if (to.equals(Square.at("h8"))) {
+            if (to.equals(castlingRights.blackKingRookStart())) {
                 newRights = newRights.withoutBlackKingSide();
             }
         }
+
 
         Square newEnPassantTarget = null;
 
@@ -202,50 +209,88 @@ public class Board {
 
     public Board legalMove(Square from, Square to, Piece promotionPiece) {
 
+
         MovementRules rules = new MovementRules();
 
+        Piece movingPiece = pieceAt(from);
         Piece targetPiece = pieceAt(to);
 
-        if(targetPiece == WhiteKing || targetPiece == BlackKing) {
-            throw new IllegalArgumentException("Illegal move: Kings cannot be captured");
+        boolean isCastling =
+                (movingPiece == Piece.WhiteKing ||
+                        movingPiece == Piece.BlackKing) &&
+                        from.rank() == to.rank() &&
+                        (to.file() == File.G ||
+                                to.file() == File.C) &&
+                        from.equals(
+                                movingPiece == Piece.WhiteKing
+                                        ? castlingRights.whiteKingStart()
+                                        : castlingRights.blackKingStart()
+                        );
+
+        // Solo se permite que el destino contenga un rey
+        // cuando se trata del caso especial de enroque.
+        if ((targetPiece == Piece.WhiteKing ||
+                targetPiece == Piece.BlackKing) &&
+                !isCastling) {
+            throw new IllegalArgumentException(
+                    "Illegal move: Kings cannot be captured"
+            );
         }
 
         if (!rules.canMove(this, from, to)) {
             throw new IllegalArgumentException("Illegal move");
         }
 
-        Piece movingPiece = pieceAt(from);
-
-        boolean isCastling =
-                (movingPiece == Piece.WhiteKing ||
-                        movingPiece == Piece.BlackKing) &&
-                        from.rank() == to.rank() &&
-                        Math.abs(to.file().getSymbol() -
-                                from.file().getSymbol()) == 2;
 
         if (isCastling) {
-            int rank = from.rank().getValue();
-            boolean kingSide =
-                    to.file().getSymbol() > from.file().getSymbol();
+            boolean white = movingPiece == Piece.WhiteKing;
+            boolean kingSide = to.file() == File.G;
 
-            Square rookFrom = Square.at(
-                    kingSide
-                            ? (rank == 1 ? "h1" : "h8")
-                            : (rank == 1 ? "a1" : "a8")
+            Square rookFrom;
+
+            if (white) {
+                rookFrom = kingSide
+                        ? castlingRights.whiteKingRookStart()
+                        : castlingRights.whiteQueenRookStart();
+            } else {
+                rookFrom = kingSide
+                        ? castlingRights.blackKingRookStart()
+                        : castlingRights.blackQueenRookStart();
+            }
+
+            Square rookTo = new Square(
+                    kingSide ? File.F : File.D,
+                    from.rank()
             );
 
-            Square rookTo = Square.at(
-                    kingSide
-                            ? (rank == 1 ? "f1" : "f8")
-                            : (rank == 1 ? "d1" : "d8")
+            // Mover ambas piezas simultáneamente.
+            Map<Square, Piece> updatedPieces =
+                    new HashMap<>(pieces);
+
+            updatedPieces.remove(from);
+            updatedPieces.remove(rookFrom);
+
+            updatedPieces.put(to, movingPiece);
+
+            updatedPieces.put(
+                    rookTo,
+                    white ? Piece.WhiteRook : Piece.BlackRook
             );
 
-            Board kingMoved = move(from, to);
-            Board castledBoard = kingMoved.move(rookFrom, rookTo);
+            CastlingRights newRights = white
+                    ? castlingRights.withoutWhiteCastling()
+                    : castlingRights.withoutBlackCastling();
+
+            Board castledBoard = new Board(
+                    updatedPieces,
+                    newRights,
+                    null
+            );
 
             CheckDetector checkDetector = new CheckDetector();
 
-            if (checkDetector.isInCheck(castledBoard, movingPiece.color())) {
+            if (checkDetector.isInCheck(
+                    castledBoard, movingPiece.color())) {
                 throw new IllegalArgumentException(
                         "Illegal move: king would be in check"
                 );
@@ -253,6 +298,7 @@ public class Board {
 
             return castledBoard;
         }
+
 
         boolean reachesLastRank =
                 movingPiece.type() == PieceType.Pawn &&
@@ -351,6 +397,91 @@ public class Board {
 
     public CastlingRights castlingRights() {
         return castlingRights;
+    }
+
+    public static Board chess960() {
+        Random random = new Random();
+        Piece[] backRank = new Piece[8];
+
+        // Los alfiles deben estar en colores opuestos.
+        backRank[random.nextInt(4) * 2] = WhiteBishop;
+        backRank[random.nextInt(4) * 2 + 1] = WhiteBishop;
+
+        List<Integer> availableFiles = new ArrayList<>(
+                List.of(0, 1, 2, 3, 4, 5, 6, 7)
+        );
+
+        // Reservar las columnas de los alfiles.
+        for (int file = 0; file < 8; file++) {
+            if (backRank[file] != null) {
+                availableFiles.remove(Integer.valueOf(file));
+            }
+        }
+
+        // Colocar la dama en una columna libre.
+        int file = availableFiles.remove(random.nextInt(availableFiles.size()));
+        backRank[file] = WhiteQueen;
+
+        // Colocar los dos caballos.
+        for (int i = 0; i < 2; i++) {
+            file = availableFiles.remove(
+                    random.nextInt(availableFiles.size())
+            );
+            backRank[file] = WhiteKnight;
+        }
+
+        // Las tres columnas restantes reciben torre, rey y torre.
+
+        // Las tres columnas restantes reciben torre, rey y torre.
+        availableFiles.sort(Integer::compareTo);
+
+        int queenRookFile = availableFiles.get(0);
+        int kingFile = availableFiles.get(1);
+        int kingRookFile = availableFiles.get(2);
+
+        backRank[queenRookFile] = WhiteRook;
+        backRank[kingFile] = WhiteKing;
+        backRank[kingRookFile] = WhiteRook;
+
+
+        Map<Square, Piece> pieces = new HashMap<>();
+
+        for (int i = 0; i < 8; i++) {
+            String column = String.valueOf((char) ('a' + i));
+
+            // Piezas blancas y peones.
+            pieces.put(Square.at(column + "1"), backRank[i]);
+            pieces.put(Square.at(column + "2"), WhitePawn);
+
+            // Piezas negras con la misma disposición.
+            Piece blackPiece = switch (backRank[i]) {
+                case WhiteRook -> BlackRook;
+                case WhiteKnight -> BlackKnight;
+                case WhiteBishop -> BlackBishop;
+                case WhiteQueen -> BlackQueen;
+                case WhiteKing -> BlackKing;
+                default -> throw new IllegalStateException(
+                        "Unexpected piece: " + backRank[i]
+                );
+            };
+
+            pieces.put(Square.at(column + "8"), blackPiece);
+            pieces.put(Square.at(column + "7"), BlackPawn);
+        }
+
+
+        CastlingRights rights = new CastlingRights(
+                true, true, true, true,
+                Square.at(String.valueOf((char) ('a' + kingFile)) + "1"),
+                Square.at(String.valueOf((char) ('a' + queenRookFile)) + "1"),
+                Square.at(String.valueOf((char) ('a' + kingRookFile)) + "1"),
+                Square.at(String.valueOf((char) ('a' + kingFile)) + "8"),
+                Square.at(String.valueOf((char) ('a' + queenRookFile)) + "8"),
+                Square.at(String.valueOf((char) ('a' + kingRookFile)) + "8")
+        );
+
+        return new Board(pieces, rights);
+
     }
 
 

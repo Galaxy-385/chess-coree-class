@@ -297,3 +297,53 @@
     -fx-text-fill: #b5b5b5;
     -fx-font-size: 11px;
 }
+
+.mode-button {
+    -fx-background-color: #252a30;
+    -fx-text-fill: #c5cbd3;
+    -fx-font-size: 13px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-padding: 12px;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.mode-button-selected {
+    -fx-background-color: #344b40;
+    -fx-text-fill: #b9edc8;
+    -fx-border-color: #5b9273;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+}
+
+.mode-button:disabled {
+    -fx-opacity: 0.45;
+    -fx-cursor: default;
+}
+
+.game-title {
+    -fx-font-family: "Arial Black";
+    -fx-font-size: 19px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #ff2525;
+    -fx-effect: dropshadow(gaussian, #650000, 0, 0, 4, 4);
+    -fx-padding: 0 0 12 0;
+}
+
+.game-title {
+    -fx-font-family: "Arial Black";
+    -fx-font-size: 24px;
+    -fx-font-weight: 900;
+    -fx-text-fill: #ff2525;
+    -fx-effect: dropshadow(gaussian, #650000, 0, 0, 4, 4);
+    -fx-padding: 0 0 5 0;
+}
+
+.mode-button {
+    -fx-max-width: infinity;
+}
+
+.mode-button-selected {
+    -fx-border-color: #ff2525;
+    -fx-border-width: 1.5px;
+}

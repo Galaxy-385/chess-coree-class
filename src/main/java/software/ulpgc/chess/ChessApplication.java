@@ -11,7 +11,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -21,7 +20,6 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,7 +35,13 @@ public class ChessApplication extends Application {
     private Square selectedSquare;
     private Label turnLabel;
     private Label messageLabel;
+    private Label eyebrow;
     private ListView<MoveRecord> moveHistory;
+
+    private boolean chess960Mode = false;
+
+    private Button classicButton;
+    private Button chess960Button;
 
     private final Set<Square> legalDestinations = new HashSet<>();
     private final Set<Square> captureDestinations = new HashSet<>();
@@ -61,6 +65,7 @@ public class ChessApplication extends Application {
         root.getStyleClass().add("app-root");
         root.setPadding(new Insets(30));
 
+        // Tablero
         GridPane boardView = createBoard();
         boardView.setPrefSize(580, 580);
         boardView.setMinSize(580, 580);
@@ -68,10 +73,20 @@ public class ChessApplication extends Application {
 
         StackPane boardContainer = new StackPane(boardView);
         boardContainer.setAlignment(Pos.CENTER);
-        HBox.setHgrow(boardContainer, Priority.ALWAYS);
 
+        // Título en la esquina superior izquierda,
+        // encima del tablero.
+        Label gameTitle = new Label("CHESS TOGETHER");
+        gameTitle.getStyleClass().add("game-title");
+
+        VBox boardColumn = new VBox(10);
+        boardColumn.setAlignment(Pos.TOP_LEFT);
+        boardColumn.getChildren().addAll(gameTitle, boardContainer);
+
+        // Panel lateral
         VBox sidebar = createSidebar();
 
+        // Columna de extras
         VBox futureColumn = new VBox(14);
         futureColumn.getStyleClass().add("sidebar");
         futureColumn.setPrefWidth(200);
@@ -82,10 +97,38 @@ public class ChessApplication extends Application {
         Label futureTitle = new Label("EXTRAS");
         futureTitle.getStyleClass().add("section-label");
 
-        futureColumn.getChildren().add(futureTitle);
+        classicButton = new Button("Classic");
+        classicButton.getStyleClass().add("mode-button");
+        classicButton.setMaxWidth(Double.MAX_VALUE);
 
+        chess960Button = new Button("Chess960");
+        chess960Button.getStyleClass().add("mode-button");
+        chess960Button.setMaxWidth(Double.MAX_VALUE);
+
+        // Classic aparece seleccionado al iniciar.
+        classicButton.getStyleClass().add("mode-button-selected");
+
+        classicButton.setOnAction(event -> {
+            chess960Mode = false;
+            updateModeButtons();
+            newGame();
+        });
+
+        chess960Button.setOnAction(event -> {
+            chess960Mode = true;
+            updateModeButtons();
+            newGame();
+        });
+
+        futureColumn.getChildren().addAll(
+                futureTitle,
+                classicButton,
+                chess960Button
+        );
+
+        // Orden: tablero con título, panel lateral y extras.
         root.getChildren().addAll(
-                boardContainer,
+                boardColumn,
                 sidebar,
                 futureColumn
         );
@@ -96,13 +139,24 @@ public class ChessApplication extends Application {
                 getClass().getResource("chess.css").toExternalForm()
         );
 
-        stage.setTitle("Chess");
+        stage.setTitle("Chess Together");
         stage.setMinWidth(1300);
         stage.setMinHeight(650);
         stage.setScene(scene);
         stage.show();
 
         refreshBoard();
+    }
+
+    private void updateModeButtons() {
+        classicButton.getStyleClass().remove("mode-button-selected");
+        chess960Button.getStyleClass().remove("mode-button-selected");
+
+        if (chess960Mode) {
+            chess960Button.getStyleClass().add("mode-button-selected");
+        } else {
+            classicButton.getStyleClass().add("mode-button-selected");
+        }
     }
 
     private VBox createSidebar() {
@@ -113,7 +167,7 @@ public class ChessApplication extends Application {
         sidebar.setMaxWidth(380);
         sidebar.setAlignment(Pos.TOP_LEFT);
 
-        Label eyebrow = new Label("CHESS / CLASSIC");
+        eyebrow = new Label("CHESS / CLASSIC");
         eyebrow.getStyleClass().add("eyebrow");
 
         Label title = new Label("Let's play.");
@@ -147,9 +201,7 @@ public class ChessApplication extends Application {
 
         moveHistory = new ListView<>();
         moveHistory.getStyleClass().add("move-history");
-        moveHistory.setPlaceholder(
-                new Label("Moves will appear here")
-        );
+        moveHistory.setPlaceholder(new Label("Moves will appear here"));
         moveHistory.setMaxWidth(Double.MAX_VALUE);
         moveHistory.setMinHeight(150);
         VBox.setVgrow(moveHistory, Priority.ALWAYS);
@@ -200,14 +252,7 @@ public class ChessApplication extends Application {
             }
         });
 
-        Label help = new Label(
-                "HOW TO PLAY\n\n"
-                        + "Green: legal moves\n\n"
-                        + "Red: captures\n\n"
-                        + "Select a piece and click a destination."
-        );
-        help.getStyleClass().add("help-text");
-        help.setWrapText(true);
+
 
         sidebar.getChildren().addAll(
                 eyebrow,
@@ -219,8 +264,7 @@ public class ChessApplication extends Application {
                 messageLabel,
                 newGameButton,
                 historyHeading,
-                moveHistory,
-                help
+                moveHistory
         );
 
         return sidebar;
@@ -304,9 +348,7 @@ public class ChessApplication extends Application {
             Color movingColor = game.turn();
             Piece movingPiece = game.board().pieceAt(from);
 
-            boolean isCapture =
-                    captureDestinations.contains(clickedSquare);
-
+            boolean isCapture = captureDestinations.contains(clickedSquare);
             Piece promotionPiece = null;
 
             boolean promotes =
@@ -317,8 +359,7 @@ public class ChessApplication extends Application {
                             && clickedSquare.rank() == Rank.R1));
 
             if (promotes) {
-                Optional<Piece> choice =
-                        choosePromotion(movingColor);
+                Optional<Piece> choice = choosePromotion(movingColor);
 
                 if (choice.isEmpty()) {
                     messageLabel.setText("Promotion cancelled.");
@@ -330,7 +371,6 @@ public class ChessApplication extends Application {
                 promotionPiece = choice.get();
             }
 
-            // calculate notation before changing the board
             String notation = AlgebraicNotation.beforeMove(
                     game.board(),
                     from,
@@ -338,18 +378,13 @@ public class ChessApplication extends Application {
                     promotionPiece
             );
 
-            // execute the move
             if (promotionPiece == null) {
                 game.move(from, clickedSquare);
             } else {
                 game.move(from, clickedSquare, promotionPiece);
             }
 
-            // add check or checkmate suffix after the move
-            notation = AlgebraicNotation.withCheckSuffix(
-                    notation,
-                    game
-            );
+            notation = AlgebraicNotation.withCheckSuffix(notation, game);
 
             int moveNumber = moveHistory.getItems().size() / 2 + 1;
 
@@ -366,16 +401,13 @@ public class ChessApplication extends Application {
                     )
             );
 
-            moveHistory.scrollTo(
-                    moveHistory.getItems().size() - 1
-            );
+            moveHistory.scrollTo(moveHistory.getItems().size() - 1);
 
             clearSelection();
             refreshBoard();
             updateGameStatus();
 
-        } catch (IllegalArgumentException
-                 | IllegalStateException exception) {
+        } catch (IllegalArgumentException | IllegalStateException exception) {
             messageLabel.setText("That move is not legal.");
             clearSelection();
             refreshBoard();
@@ -384,9 +416,7 @@ public class ChessApplication extends Application {
 
     private void selectPiece(Square square, Piece piece) {
         if (piece == null || piece.color() != game.turn()) {
-            messageLabel.setText(
-                    "Select a piece of the current player."
-            );
+            messageLabel.setText("Select a piece of the current player.");
             return;
         }
 
@@ -394,7 +424,7 @@ public class ChessApplication extends Application {
         calculateLegalDestinations(square);
 
         messageLabel.setText(
-                "Selected " + square + ". Choose a destination."
+                "Selected " + square
         );
 
         refreshBoard();
@@ -452,7 +482,7 @@ public class ChessApplication extends Application {
                     }
 
                 } catch (IllegalArgumentException exception) {
-                    // this destination is not legal
+                    // Este destino no es legal.
                 }
             }
         }
@@ -578,9 +608,7 @@ public class ChessApplication extends Application {
 
                 button.setAccessibleText(
                         square.toString()
-                                + (piece == null
-                                ? ", empty"
-                                : ", " + piece)
+                                + (piece == null ? ", empty" : ", " + piece)
                 );
             }
         }
@@ -608,9 +636,7 @@ public class ChessApplication extends Application {
             );
         } else if (game.isStalemate() || game.isDraw()) {
             turnLabel.setText("Draw");
-            messageLabel.setText(
-                    "The game has ended in a draw."
-            );
+            messageLabel.setText("The game has ended in a draw.");
         } else {
             messageLabel.setText(
                     game.turn() == Color.White
@@ -621,10 +647,23 @@ public class ChessApplication extends Application {
     }
 
     private void newGame() {
-        game = new Game();
+        game = chess960Mode
+                ? new Game(Board.chess960())
+                : new Game();
+
         clearSelection();
         moveHistory.getItems().clear();
-        messageLabel.setText("New game started.");
+
+        eyebrow.setText(
+                chess960Mode ? "CHESS / CHESS960" : "CHESS / CLASSIC"
+        );
+
+        messageLabel.setText(
+                chess960Mode
+                        ? "New Chess960 game started."
+                        : "New classic game started."
+        );
+
         refreshBoard();
     }
 

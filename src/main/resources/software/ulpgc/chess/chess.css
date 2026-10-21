@@ -91,9 +91,9 @@
 
 /* game messages */
 .message-label {
-    -fx-text-fill: #eeeeee;
+    -fx-text-fill: #b52b35;
     -fx-font-size: 14px;
-    -fx-font-weight: normal;
+    -fx-font-weight: bold;
     -fx-wrap-text: true;
 }
 
@@ -205,4 +205,95 @@
 
 .promotion-dialog .button:hover {
     -fx-background-color: #484d56;
+}
+
+/* move history */
+.move-history {
+    -fx-background-color: #1b1b1b;
+    -fx-background-radius: 10px;
+    -fx-border-color: #454545;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 4px;
+}
+
+.move-history .virtual-flow,
+.move-history .clipped-container {
+    -fx-background-color: #1b1b1b;
+}
+
+.move-history .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 4px;
+}
+
+.move-history .list-cell:filled:odd {
+    -fx-background-color: #292929;
+}
+
+.move-history .list-cell:filled:selected {
+    -fx-background-color: #492327;
+}
+
+.move-history .list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.move-history .placeholder .label {
+    -fx-text-fill: #aaaaaa;
+    -fx-font-size: 13px;
+}
+
+.history-move {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.history-details {
+    -fx-text-fill: #b5b5b5;
+    -fx-font-size: 11px;
+}
+
+/* move history */
+.move-history {
+    -fx-background-color: #1b1b1b;
+    -fx-background-radius: 10px;
+    -fx-border-color: #454545;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 4px;
+}
+
+.move-history .virtual-flow,
+.move-history .clipped-container {
+    -fx-background-color: #1b1b1b;
+}
+
+.move-history .list-cell {
+    -fx-padding: 1px;
+}
+
+.move-history .list-cell:filled:odd {
+    -fx-background-color: #292929;
+}
+
+.move-history .list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.move-history .placeholder .label {
+    -fx-text-fill: #aaaaaa;
+    -fx-font-size: 13px;
+}
+
+.history-move {
+    -fx-text-fill: #ffffff;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.history-details {
+    -fx-text-fill: #b5b5b5;
+    -fx-font-size: 11px;
 }

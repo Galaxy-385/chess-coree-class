@@ -1,3 +1,4 @@
+
 package software.ulpgc.chess;
 
 import javafx.application.Application;
@@ -5,19 +6,21 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.ButtonType;
-import javafx.scene.layout.HBox;
 
 import java.util.HashSet;
 import java.util.List;
@@ -33,9 +36,21 @@ public class ChessApplication extends Application {
     private Square selectedSquare;
     private Label turnLabel;
     private Label messageLabel;
+    private ListView<MoveRecord> moveHistory;
 
     private final Set<Square> legalDestinations = new HashSet<>();
     private final Set<Square> captureDestinations = new HashSet<>();
+
+    private record MoveRecord(
+            Piece piece,
+            Square from,
+            Square to,
+            boolean capture,
+            Piece promotionPiece,
+            int moveNumber,
+            Color color,
+            String notation
+    ) {}
 
     @Override
     public void start(Stage stage) {
@@ -53,14 +68,14 @@ public class ChessApplication extends Application {
         BorderPane.setMargin(boardView, new Insets(30));
         BorderPane.setMargin(sidebar, new Insets(30, 30, 30, 0));
 
-        Scene scene = new Scene(root, 1120, 760);
+        Scene scene = new Scene(root, 1280, 760);
 
         scene.getStylesheets().add(
                 getClass().getResource("chess.css").toExternalForm()
         );
 
         stage.setTitle("Chess");
-        stage.setMinWidth(850);
+        stage.setMinWidth(1100);
         stage.setMinHeight(650);
         stage.setScene(scene);
         stage.show();
@@ -69,9 +84,11 @@ public class ChessApplication extends Application {
     }
 
     private VBox createSidebar() {
-        VBox sidebar = new VBox(18);
+        VBox sidebar = new VBox(14);
         sidebar.getStyleClass().add("sidebar");
-        sidebar.setPrefWidth(270);
+        sidebar.setPrefWidth(380);
+        sidebar.setMinWidth(380);
+        sidebar.setMaxWidth(380);
         sidebar.setAlignment(Pos.TOP_LEFT);
 
         Label eyebrow = new Label("CHESS / CLASSIC");
@@ -103,14 +120,70 @@ public class ChessApplication extends Application {
         newGameButton.setMaxWidth(Double.MAX_VALUE);
         newGameButton.setOnAction(event -> newGame());
 
+        Label historyHeading = new Label("MOVE HISTORY");
+        historyHeading.getStyleClass().add("section-label");
+
+        moveHistory = new ListView<>();
+        moveHistory.getStyleClass().add("move-history");
+        moveHistory.setPlaceholder(
+                new Label("Moves will appear here")
+        );
+        moveHistory.setMaxWidth(Double.MAX_VALUE);
+        moveHistory.setMinHeight(150);
+        VBox.setVgrow(moveHistory, Priority.ALWAYS);
+
+        moveHistory.setCellFactory(list -> new ListCell<>() {
+            @Override
+            protected void updateItem(MoveRecord move, boolean empty) {
+                super.updateItem(move, empty);
+
+                if (empty || move == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+
+                StackPane pieceIcon = PieceSprite.create(move.piece());
+                pieceIcon.setMinSize(28, 28);
+                pieceIcon.setPrefSize(28, 28);
+                pieceIcon.setMaxSize(28, 28);
+
+                Label movement = new Label(
+                        move.from().toString().replace("Square", "")
+                                + (move.capture() ? " x " : " → ")
+                                + move.to().toString().replace("Square", "")
+                );
+                movement.getStyleClass().add("history-move");
+                movement.setWrapText(false);
+                movement.setMaxWidth(Double.MAX_VALUE);
+
+                Label details = new Label(
+                        move.moveNumber()
+                                + (move.color() == Color.White ? "." : "...")
+                );
+                details.getStyleClass().add("history-details");
+
+                VBox text = new VBox(3, movement, details);
+                text.setAlignment(Pos.CENTER_LEFT);
+                text.setMinWidth(0);
+                HBox.setHgrow(text, Priority.ALWAYS);
+
+                HBox row = new HBox(3, pieceIcon, text);
+                row.setAlignment(Pos.CENTER_LEFT);
+                row.setPadding(new Insets(3, 4, 3, 4));
+                row.setMaxWidth(Double.MAX_VALUE);
+
+                setGraphic(row);
+                setText(null);
+            }
+        });
+
         Label help = new Label(
                 "HOW TO PLAY\n\n"
-                        + "1. Click one of your pieces.\n\n"
-                        + "2. Green squares show legal moves.\n\n"
-                        + "3. Red squares show captures.\n\n"
-                        + "4. Click a destination to move."
+                        + "Green: legal moves\n\n"
+                        + "Red: captures\n\n"
+                        + "Select a piece and click a destination."
         );
-
         help.getStyleClass().add("help-text");
         help.setWrapText(true);
 
@@ -123,6 +196,8 @@ public class ChessApplication extends Application {
                 turnLabel,
                 messageLabel,
                 newGameButton,
+                historyHeading,
+                moveHistory,
                 help
         );
 
@@ -191,37 +266,37 @@ public class ChessApplication extends Application {
             return;
         }
 
-        // selecting another piece of the current player
         if (clickedPiece != null
                 && clickedPiece.color() == game.turn()) {
-
             selectPiece(clickedSquare, clickedPiece);
             return;
         }
 
-        // only attempt moves to calculated legal destinations
         if (!legalDestinations.contains(clickedSquare)) {
             messageLabel.setText("That move is not legal.");
             return;
         }
 
         try {
-            Piece movingPiece = game.board().pieceAt(selectedSquare);
+            Square from = selectedSquare;
+            Color movingColor = game.turn();
+            Piece movingPiece = game.board().pieceAt(from);
+
+            boolean isCapture =
+                    captureDestinations.contains(clickedSquare);
+
             Piece promotionPiece = null;
 
             boolean promotes =
                     movingPiece.type() == PieceType.Pawn
-                            && (
-                            (movingPiece.color() == Color.White
-                                    && clickedSquare.rank() == Rank.R8)
-                                    ||
-                                    (movingPiece.color() == Color.Black
-                                            && clickedSquare.rank() == Rank.R1)
-                    );
+                            && ((movingColor == Color.White
+                            && clickedSquare.rank() == Rank.R8)
+                            || (movingColor == Color.Black
+                            && clickedSquare.rank() == Rank.R1));
 
             if (promotes) {
                 Optional<Piece> choice =
-                        choosePromotion(movingPiece.color());
+                        choosePromotion(movingColor);
 
                 if (choice.isEmpty()) {
                     messageLabel.setText("Promotion cancelled.");
@@ -233,21 +308,52 @@ public class ChessApplication extends Application {
                 promotionPiece = choice.get();
             }
 
+            // calculate notation before changing the board
+            String notation = AlgebraicNotation.beforeMove(
+                    game.board(),
+                    from,
+                    clickedSquare,
+                    promotionPiece
+            );
+
+            // execute the move
             if (promotionPiece == null) {
-                game.move(selectedSquare, clickedSquare);
+                game.move(from, clickedSquare);
             } else {
-                game.move(
-                        selectedSquare,
-                        clickedSquare,
-                        promotionPiece
-                );
+                game.move(from, clickedSquare, promotionPiece);
             }
+
+            // add check or checkmate suffix after the move
+            notation = AlgebraicNotation.withCheckSuffix(
+                    notation,
+                    game
+            );
+
+            int moveNumber = moveHistory.getItems().size() / 2 + 1;
+
+            moveHistory.getItems().add(
+                    new MoveRecord(
+                            movingPiece,
+                            from,
+                            clickedSquare,
+                            isCapture,
+                            promotionPiece,
+                            moveNumber,
+                            movingColor,
+                            notation
+                    )
+            );
+
+            moveHistory.scrollTo(
+                    moveHistory.getItems().size() - 1
+            );
 
             clearSelection();
             refreshBoard();
             updateGameStatus();
 
-        } catch (IllegalArgumentException | IllegalStateException exception) {
+        } catch (IllegalArgumentException
+                 | IllegalStateException exception) {
             messageLabel.setText("That move is not legal.");
             clearSelection();
             refreshBoard();
@@ -293,24 +399,20 @@ public class ChessApplication extends Application {
 
                 Piece promotionPiece = null;
 
-                // use a queen to validate a pawn's last-rank move
                 if (selectedPiece.type() == PieceType.Pawn
-                        && (
-                        (selectedPiece.color() == Color.White
-                                && to.rank() == Rank.R8)
-                                ||
-                                (selectedPiece.color() == Color.Black
-                                        && to.rank() == Rank.R1)
-                )) {
-                    promotionPiece = selectedPiece.color() == Color.White
-                            ? Piece.WhiteQueen
-                            : Piece.BlackQueen;
+                        && ((selectedPiece.color() == Color.White
+                        && to.rank() == Rank.R8)
+                        || (selectedPiece.color() == Color.Black
+                        && to.rank() == Rank.R1))) {
+
+                    promotionPiece =
+                            selectedPiece.color() == Color.White
+                                    ? Piece.WhiteQueen
+                                    : Piece.BlackQueen;
                 }
 
                 try {
-                    // legalMove returns a new board; it does not change this one
                     board.legalMove(from, to, promotionPiece);
-
                     legalDestinations.add(to);
 
                     Piece target = board.pieceAt(to);
@@ -375,8 +477,6 @@ public class ChessApplication extends Application {
         HBox pieceOptions = new HBox(12);
         pieceOptions.setAlignment(Pos.CENTER);
 
-        final Piece[] selectedPiece = {choices.get(0)};
-
         for (Piece piece : choices) {
             Button option = new Button();
             option.getStyleClass().add("promotion-option");
@@ -390,7 +490,6 @@ public class ChessApplication extends Application {
             optionBox.setAlignment(Pos.CENTER);
 
             option.setOnAction(event -> {
-                selectedPiece[0] = piece;
                 dialog.setResult(piece);
                 dialog.close();
             });
@@ -404,7 +503,6 @@ public class ChessApplication extends Application {
 
         dialog.getDialogPane().setContent(content);
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
-
         dialog.setResultConverter(buttonType -> null);
 
         return dialog.showAndWait();
@@ -503,6 +601,7 @@ public class ChessApplication extends Application {
     private void newGame() {
         game = new Game();
         clearSelection();
+        moveHistory.getItems().clear();
         messageLabel.setText("New game started.");
         refreshBoard();
     }

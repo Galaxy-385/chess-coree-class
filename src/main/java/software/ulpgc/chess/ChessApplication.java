@@ -1,13 +1,16 @@
-
 package software.ulpgc.chess;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -22,7 +25,9 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.scene.Node;
+import javafx.util.Duration;
+import javafx.scene.control.OverrunStyle;
+import javafx.scene.layout.Region;
 
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +51,8 @@ public class ChessApplication extends Application {
     private Button classicButton;
     private Button chess960Button;
 
+    private Timeline chessAnimation;
+
     private final Set<Square> legalDestinations = new HashSet<>();
     private final Set<Square> captureDestinations = new HashSet<>();
 
@@ -56,8 +63,7 @@ public class ChessApplication extends Application {
             boolean capture,
             Piece promotionPiece,
             int moveNumber,
-            Color color,
-            String notation
+            Color color
     ) {}
 
     @Override
@@ -69,9 +75,23 @@ public class ChessApplication extends Application {
         root.setPadding(new Insets(24));
         root.setAlignment(Pos.CENTER);
 
-        // IZQUIERDA: título y panel de información
         Label gameTitle = new Label("CHESS TOGETHER");
         gameTitle.getStyleClass().add("game-title");
+        gameTitle.setMinWidth(Region.USE_PREF_SIZE);
+        gameTitle.setMaxWidth(Region.USE_PREF_SIZE);
+
+        Node artwork = createArtwork();
+
+        StackPane animationPanel = new StackPane(artwork);
+        animationPanel.setAlignment(Pos.CENTER_LEFT);
+        animationPanel.setMinSize(100, 80);
+        animationPanel.setPrefSize(100, 80);
+        animationPanel.setMaxSize(100, 80);
+
+        HBox header = new HBox(0, gameTitle, animationPanel);
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setSpacing(0);
+        header.setPadding(Insets.EMPTY);
 
         VBox sidebar = createSidebar();
 
@@ -80,10 +100,10 @@ public class ChessApplication extends Application {
         leftColumn.setPrefWidth(330);
         leftColumn.setMinWidth(310);
         leftColumn.setMaxWidth(330);
-        leftColumn.getChildren().addAll(gameTitle, sidebar);
+        leftColumn.getChildren().addAll(header, sidebar);
         VBox.setVgrow(sidebar, Priority.ALWAYS);
 
-        // CENTRO: tablero
+        // CENTRO: tablero.
         GridPane boardView = createBoard();
         boardView.setPrefSize(580, 580);
         boardView.setMinSize(580, 580);
@@ -98,7 +118,7 @@ public class ChessApplication extends Application {
         boardColumn.setMinWidth(580);
         boardColumn.getChildren().add(boardContainer);
 
-        // DERECHA: extras y modos de juego
+        // DERECHA: modos de juego.
         VBox extrasPanel = new VBox(14);
         extrasPanel.getStyleClass().add("extras-panel");
         extrasPanel.setPadding(new Insets(18));
@@ -132,25 +152,13 @@ public class ChessApplication extends Application {
                 chess960Button
         );
 
-        // Ilustración situada debajo de EXTRAS.
-        // El PNG debe estar en el mismo paquete de recursos que chess.css.
-        Node artwork = createArtwork();
-
-        StackPane artworkPanel = new StackPane(artwork);
-        artworkPanel.getStyleClass().add("artwork-panel");
-        artworkPanel.setAlignment(Pos.CENTER);
-        artworkPanel.setMinHeight(0);
-        VBox.setVgrow(artworkPanel, Priority.ALWAYS);
-
-        VBox rightColumn = new VBox(0);
+        VBox rightColumn = new VBox();
         rightColumn.getStyleClass().add("right-column");
         rightColumn.setPrefWidth(370);
         rightColumn.setMinWidth(330);
         rightColumn.setMaxWidth(370);
-        rightColumn.getChildren().addAll(extrasPanel, artworkPanel);
-        VBox.setVgrow(artworkPanel, Priority.ALWAYS);
+        rightColumn.getChildren().add(extrasPanel);
 
-        // Distribución final de las tres columnas.
         root.getChildren().addAll(
                 leftColumn,
                 boardColumn,
@@ -159,9 +167,10 @@ public class ChessApplication extends Application {
 
         Scene scene = new Scene(root, 1500, 820);
 
-        scene.getStylesheets().add(
-                getClass().getResource("chess.css").toExternalForm()
-        );
+        var css = getClass().getResource("chess.css");
+        if (css != null) {
+            scene.getStylesheets().add(css.toExternalForm());
+        }
 
         stage.setTitle("Chess Together");
         stage.setMinWidth(1400);
@@ -175,44 +184,62 @@ public class ChessApplication extends Application {
 
     private Node createArtwork() {
         var imageUrl = getClass().getResource(
-                "/software/ulpgc/chess/chess-battle.png"
+                "chess_battle_sprite_7_frames.png"
         );
 
         if (imageUrl == null) {
             Label placeholder = new Label(
-                    "NO SE ENCUENTRA LA IMAGEN\n\n"
-                            + "Comprueba que chess-battle.png esté en:\n"
-                            + "src/main/resources/software/ulpgc/chess/"
+                    "No se encuentra el sprite.\n"
+                            + "Comprueba la carpeta resources/software/ulpgc/chess/"
             );
-
             placeholder.getStyleClass().add("artwork-placeholder");
             placeholder.setWrapText(true);
-            placeholder.setMaxWidth(300);
+            placeholder.setMaxWidth(180);
             placeholder.setAlignment(Pos.CENTER);
-
             return placeholder;
         }
 
-        Image image = new Image(imageUrl.toExternalForm());
+        Image sprite = new Image(imageUrl.toExternalForm());
 
-        if (image.isError()) {
-            Label error = new Label(
-                    "No se pudo cargar la imagen:\n"
-                            + image.getException()
-            );
-
+        if (sprite.isError()) {
+            Label error = new Label("No se pudo cargar el sprite.");
             error.getStyleClass().add("artwork-placeholder");
-            error.setWrapText(true);
             return error;
         }
 
-        ImageView imageView = new ImageView(image);
-        imageView.setPreserveRatio(true);
-        imageView.setSmooth(true);
-        imageView.setFitWidth(350);
-        imageView.setFitHeight(490);
+        int totalFrames = 7;
+        int frameWidth = 310;
+        int frameHeight = 724;
 
-        return imageView;
+        ImageView view = new ImageView(sprite);
+        view.setViewport(new Rectangle2D(
+                0, 0, frameWidth, frameHeight
+        ));
+
+        view.setFitWidth(180);
+        view.setFitHeight(100);
+        view.setPreserveRatio(true);
+        view.setSmooth(false);
+
+        final int[] currentFrame = {0};
+
+        chessAnimation = new Timeline(
+                new KeyFrame(Duration.millis(120), event -> {
+                    currentFrame[0] = (currentFrame[0] + 1) % totalFrames;
+
+                    view.setViewport(new Rectangle2D(
+                            currentFrame[0] * frameWidth,
+                            0,
+                            frameWidth,
+                            frameHeight
+                    ));
+                })
+        );
+
+        chessAnimation.setCycleCount(Timeline.INDEFINITE);
+        chessAnimation.play();
+
+        return view;
     }
 
     private void updateModeButtons() {
@@ -268,9 +295,7 @@ public class ChessApplication extends Application {
 
         moveHistory = new ListView<>();
         moveHistory.getStyleClass().add("move-history");
-        moveHistory.setPlaceholder(
-                new Label("Moves will appear here")
-        );
+        moveHistory.setPlaceholder(new Label("Moves will appear here"));
         moveHistory.setMaxWidth(Double.MAX_VALUE);
         moveHistory.setMinHeight(130);
         VBox.setVgrow(moveHistory, Priority.ALWAYS);
@@ -291,13 +316,19 @@ public class ChessApplication extends Application {
                 pieceIcon.setPrefSize(28, 28);
                 pieceIcon.setMaxSize(28, 28);
 
-                Label movement = new Label(
+                String movementText =
                         move.from().toString().replace("Square", "")
                                 + (move.capture() ? " x " : " → ")
-                                + move.to().toString().replace("Square", "")
-                );
+                                + move.to().toString().replace("Square", "");
+
+                if (move.promotionPiece() != null) {
+                    movementText += " = " + move.promotionPiece().type();
+                }
+
+                Label movement = new Label(movementText);
                 movement.getStyleClass().add("history-move");
                 movement.setWrapText(false);
+                movement.setMaxWidth(Double.MAX_VALUE);
 
                 Label details = new Label(
                         move.moveNumber()
@@ -436,35 +467,23 @@ public class ChessApplication extends Application {
                 promotionPiece = choice.get();
             }
 
-            String notation = AlgebraicNotation.beforeMove(
-                    game.board(),
-                    from,
-                    clickedSquare,
-                    promotionPiece
-            );
-
             if (promotionPiece == null) {
                 game.move(from, clickedSquare);
             } else {
                 game.move(from, clickedSquare, promotionPiece);
             }
 
-            notation = AlgebraicNotation.withCheckSuffix(notation, game);
-
             int moveNumber = moveHistory.getItems().size() / 2 + 1;
 
-            moveHistory.getItems().add(
-                    new MoveRecord(
-                            movingPiece,
-                            from,
-                            clickedSquare,
-                            isCapture,
-                            promotionPiece,
-                            moveNumber,
-                            movingColor,
-                            notation
-                    )
-            );
+            moveHistory.getItems().add(new MoveRecord(
+                    movingPiece,
+                    from,
+                    clickedSquare,
+                    isCapture,
+                    promotionPiece,
+                    moveNumber,
+                    movingColor
+            ));
 
             moveHistory.scrollTo(moveHistory.getItems().size() - 1);
 
@@ -488,8 +507,7 @@ public class ChessApplication extends Application {
         selectedSquare = square;
         calculateLegalDestinations(square);
 
-        messageLabel.setText("Selected " + square);
-
+        messageLabel.setText("Selected " + square + ". Choose a destination.");
         refreshBoard();
     }
 
@@ -574,9 +592,10 @@ public class ChessApplication extends Application {
         dialog.setTitle("Pawn promotion");
         dialog.setHeaderText(null);
 
-        dialog.getDialogPane().getStylesheets().add(
-                getClass().getResource("chess.css").toExternalForm()
-        );
+        var css = getClass().getResource("chess.css");
+        if (css != null) {
+            dialog.getDialogPane().getStylesheets().add(css.toExternalForm());
+        }
         dialog.getDialogPane().getStyleClass().add("promotion-dialog");
 
         Label title = new Label("PROMOTE YOUR PAWN");
@@ -722,6 +741,13 @@ public class ChessApplication extends Application {
         );
 
         refreshBoard();
+    }
+
+    @Override
+    public void stop() {
+        if (chessAnimation != null) {
+            chessAnimation.stop();
+        }
     }
 
     public static void main(String[] args) {

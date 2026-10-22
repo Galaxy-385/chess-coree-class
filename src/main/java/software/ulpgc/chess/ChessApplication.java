@@ -507,7 +507,7 @@ public class ChessApplication extends Application {
         selectedSquare = square;
         calculateLegalDestinations(square);
 
-        messageLabel.setText("Selected " + square + ". Choose a destination.");
+        messageLabel.setText("Selected " + square);
         refreshBoard();
     }
 

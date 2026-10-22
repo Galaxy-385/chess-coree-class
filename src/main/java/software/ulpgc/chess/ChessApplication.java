@@ -123,7 +123,7 @@ public class ChessApplication extends Application {
         extrasPanel.getStyleClass().add("extras-panel");
         extrasPanel.setPadding(new Insets(18));
 
-        Label extrasTitle = new Label("EXTRAS");
+        Label extrasTitle = new Label("GAME-MODES");
         extrasTitle.getStyleClass().add("section-label");
 
         classicButton = new Button("♙   Classic");

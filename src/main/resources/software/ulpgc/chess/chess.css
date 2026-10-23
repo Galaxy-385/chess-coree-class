@@ -80,19 +80,25 @@
 .selected-square {
     -fx-border-color: #ffe45c;
     -fx-border-width: 4px;
-    -fx-effect: dropshadow(gaussian, #ffe45c, 16, 0.7, 0, 0);
+    -fx-border-insets: 0;
+    -fx-border-style: solid;
+    -fx-effect: none;
 }
 
 .legal-destination {
     -fx-border-color: #52e878;
     -fx-border-width: 4px;
-    -fx-effect: dropshadow(gaussian, #52e878, 12, 0.6, 0, 0);
+    -fx-border-insets: 0;
+    -fx-border-style: solid;
+    -fx-effect: none;
 }
 
 .capture-destination {
     -fx-border-color: #ff5252;
     -fx-border-width: 4px;
-    -fx-effect: dropshadow(gaussian, #ff5252, 14, 0.7, 0, 0);
+    -fx-border-insets: 0;
+    -fx-border-style: solid;
+    -fx-effect: none;
 }
 
 /* =====================================================
@@ -184,6 +190,13 @@
 .move-history .virtual-flow,
 .move-history .clipped-container {
     -fx-background-color: #1b1b1b;
+}
+
+.move-history .scroll-bar:vertical {
+    -fx-pref-width: 0;
+    -fx-min-width: 0;
+    -fx-max-width: 0;
+    -fx-opacity: 0;
 }
 
 .move-history .list-cell {
@@ -280,7 +293,7 @@
 .artwork-panel {
     -fx-background-color: #11151a;
     -fx-padding: 8px;
-    -fx-background-radius: 0 0 12px 12px;
+    -fx-background-radius: 0 0 12px f12px;
 }
 
 .artwork-placeholder {

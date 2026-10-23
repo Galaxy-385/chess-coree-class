@@ -483,7 +483,4 @@ public class Board {
         return new Board(pieces, rights);
 
     }
-
-
-
 }

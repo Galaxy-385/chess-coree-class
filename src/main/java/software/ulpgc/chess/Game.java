@@ -6,12 +6,14 @@ public class Game {
     private Color turn;
     private final GameHistory history;
     private final HalfMoveClock halfMoveClock;
+    private int fullMoveNumber;
 
     public Game() {
         this.board = Board.initial();
         this.turn = Color.White;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
+        this.fullMoveNumber = 1;
 
         history.recordPosition(board, turn);
     }
@@ -21,6 +23,7 @@ public class Game {
         this.turn = Color.White;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
+        this.fullMoveNumber = 1;
 
         history.recordPosition(board, turn);
     }
@@ -30,6 +33,7 @@ public class Game {
         this.turn = turn;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
+        this.fullMoveNumber = 1;
 
         history.recordPosition(board, turn);
     }
@@ -59,6 +63,10 @@ public class Game {
 
         halfMoveClock.recordMove(piece, capturedPiece);
 
+        if (turn == Color.Black) {
+            fullMoveNumber++;
+        }
+
         turn = turn == Color.White ? Color.Black : Color.White;
 
         history.recordPosition(board, turn);
@@ -80,6 +88,10 @@ public class Game {
         board = board.legalMove(from, to, promotionPiece);
 
         halfMoveClock.recordMove(piece, capturedPiece);
+
+        if (turn == Color.Black) {
+            fullMoveNumber++;
+        }
 
         turn = turn == Color.White ? Color.Black : Color.White;
 
@@ -117,5 +129,4 @@ public class Game {
     public boolean isGameOver() {
         return isCheckmate() || isDraw();
     }
-
 }

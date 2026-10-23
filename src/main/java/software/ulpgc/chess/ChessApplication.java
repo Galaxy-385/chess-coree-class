@@ -298,7 +298,7 @@ public class ChessApplication extends Application {
         moveHistory.setPlaceholder(new Label("Moves will appear here"));
         moveHistory.setMaxWidth(Double.MAX_VALUE);
         moveHistory.setMinHeight(130);
-        VBox.setVgrow(moveHistory, Priority.ALWAYS);
+        VBox.setVgrow(moveHistory, Priority.SOMETIMES);
 
         moveHistory.setCellFactory(list -> new ListCell<>() {
             @Override
@@ -312,26 +312,32 @@ public class ChessApplication extends Application {
                 }
 
                 StackPane pieceIcon = PieceSprite.create(move.piece());
+                if (move.piece().type() != PieceType.Pawn) {
+                    pieceIcon.setScaleX(0.85);
+                    pieceIcon.setScaleY(0.85);
+                }
                 pieceIcon.setMinSize(28, 28);
                 pieceIcon.setPrefSize(28, 28);
                 pieceIcon.setMaxSize(28, 28);
 
                 String movementText =
-                        move.from().toString().replace("Square", "")
+                        move.from().file().name().toLowerCase()
+                                + move.from().rank().name().substring(1)
                                 + (move.capture() ? " x " : " → ")
-                                + move.to().toString().replace("Square", "");
+                                + move.to().file().name().toLowerCase()
+                                + move.to().rank().name().substring(1);
 
                 if (move.promotionPiece() != null) {
                     movementText += " = " + move.promotionPiece().type();
                 }
 
-                Label movement = new Label(movementText);
+                Label movement = new Label(" " + movementText);
                 movement.getStyleClass().add("history-move");
                 movement.setWrapText(false);
                 movement.setMaxWidth(Double.MAX_VALUE);
 
                 Label details = new Label(
-                        move.moveNumber()
+                        " " + move.moveNumber()
                                 + (move.color() == Color.White ? "." : "...")
                 );
                 details.getStyleClass().add("history-details");
@@ -507,7 +513,11 @@ public class ChessApplication extends Application {
         selectedSquare = square;
         calculateLegalDestinations(square);
 
-        messageLabel.setText("Selected " + square);
+        messageLabel.setText(
+                "Selected Square: "
+                        + square.file().name().toLowerCase()
+                        + square.rank().name().substring(1)
+        );
         refreshBoard();
     }
 

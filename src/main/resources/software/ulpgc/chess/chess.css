@@ -359,3 +359,9 @@
 .promotion-dialog .button:hover {
     -fx-background-color: #484d56;
 }
+
+
+
+.app-viewport {
+    -fx-background-color: #171717;
+}

@@ -28,6 +28,8 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.layout.Region;
+import javafx.beans.binding.Bindings;
+import javafx.scene.transform.Scale;
 
 import java.util.HashSet;
 import java.util.List;
@@ -70,6 +72,10 @@ public class ChessApplication extends Application {
     public void start(Stage stage) {
         game = new Game();
 
+        // Tamaño de referencia del diseño original.
+        final double baseWidth = 1500;
+        final double baseHeight = 820;
+
         HBox root = new HBox(18);
         root.getStyleClass().add("app-root");
         root.setPadding(new Insets(24));
@@ -103,7 +109,6 @@ public class ChessApplication extends Application {
         leftColumn.getChildren().addAll(header, sidebar);
         VBox.setVgrow(sidebar, Priority.ALWAYS);
 
-        // CENTRO: tablero.
         GridPane boardView = createBoard();
         boardView.setPrefSize(580, 580);
         boardView.setMinSize(580, 580);
@@ -118,7 +123,6 @@ public class ChessApplication extends Application {
         boardColumn.setMinWidth(580);
         boardColumn.getChildren().add(boardContainer);
 
-        // DERECHA: modos de juego.
         VBox extrasPanel = new VBox(14);
         extrasPanel.getStyleClass().add("extras-panel");
         extrasPanel.setPadding(new Insets(18));
@@ -165,7 +169,45 @@ public class ChessApplication extends Application {
                 rightColumn
         );
 
-        Scene scene = new Scene(root, 1500, 820);
+
+        // Contenedor que conserva el tamaño y la proporción originales.
+        StackPane viewport = new StackPane(root);
+        viewport.getStyleClass().add("app-viewport");
+        viewport.setAlignment(Pos.CENTER);
+
+        root.setMinSize(baseWidth, baseHeight);
+        root.setPrefSize(baseWidth, baseHeight);
+        root.setMaxSize(baseWidth, baseHeight);
+
+        Scale scale = new Scale(1, 1, baseWidth / 2, baseHeight / 2);
+        root.getTransforms().add(scale);
+
+        root.setTranslateX(0);
+        root.setTranslateY(0);
+
+        viewport.widthProperty().addListener((obs, oldWidth, newWidth) ->
+                updateScale(
+                        scale,
+                        viewport.getWidth(),
+                        viewport.getHeight(),
+                        baseWidth,
+                        baseHeight
+                )
+        );
+
+        viewport.heightProperty().addListener((obs, oldHeight, newHeight) ->
+                updateScale(
+                        scale,
+                        viewport.getWidth(),
+                        viewport.getHeight(),
+                        baseWidth,
+                        baseHeight
+                )
+        );
+
+        Scene scene = new Scene(viewport, baseWidth, baseHeight);
+        scene.setFill(javafx.scene.paint.Color.web("#171717"));
+
 
         var css = getClass().getResource("chess.css");
         if (css != null) {
@@ -173,14 +215,44 @@ public class ChessApplication extends Application {
         }
 
         stage.setTitle("Chess Together");
-        stage.setMinWidth(1400);
-        stage.setMinHeight(760);
+        stage.setMinWidth(900);
+        stage.setMinHeight(600);
         stage.setScene(scene);
         stage.show();
+
+        updateScale(
+                scale,
+                viewport.getWidth(),
+                viewport.getHeight(),
+                baseWidth,
+                baseHeight
+        );
 
         refreshBoard();
         updateModeButtons();
     }
+
+
+    private void updateScale(
+            Scale scale,
+            double availableWidth,
+            double availableHeight,
+            double baseWidth,
+            double baseHeight
+    ) {
+        if (availableWidth <= 0 || availableHeight <= 0) {
+            return;
+        }
+
+        double factor = Math.min(
+                availableWidth / baseWidth,
+                availableHeight / baseHeight
+        );
+
+        scale.setX(factor);
+        scale.setY(factor);
+    }
+
 
     private Node createArtwork() {
         var imageUrl = getClass().getResource(

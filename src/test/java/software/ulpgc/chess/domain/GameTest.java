@@ -1,9 +1,8 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 import java.util.Map;
 import java.util.HashMap;
 import org.junit.jupiter.api.Test;
-import software.ulpgc.chess.domain.*;
 
 import static org.junit.Assert.*;
 

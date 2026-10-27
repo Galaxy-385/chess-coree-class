@@ -1,10 +1,7 @@
 
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 import org.junit.jupiter.api.Test;
-import software.ulpgc.chess.domain.Board;
-import software.ulpgc.chess.domain.KingMovementRule;
-import software.ulpgc.chess.domain.Square;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

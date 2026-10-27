@@ -1,7 +1,6 @@
-package software.ulpgc.chess;
+package software.ulpgc.chess.domain;
 
 import org.junit.jupiter.api.Test;
-import software.ulpgc.chess.domain.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;

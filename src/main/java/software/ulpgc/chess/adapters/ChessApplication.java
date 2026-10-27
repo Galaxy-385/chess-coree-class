@@ -283,19 +283,14 @@ public class ChessApplication extends Application {
 
     private Node createArtwork() {
         var imageUrl = getClass().getResource(
-                "chess_battle_sprite_7_frames.png"
+                "/software/ulpgc/chess/chess_battle_sprite_7_frames.png"
         );
 
         if (imageUrl == null) {
-            Label placeholder = new Label(
-                    "No se encuentra el sprite.\n"
-                            + "Comprueba la carpeta resources/software/ulpgc/chess/"
+            throw new IllegalStateException(
+                    "No se encuentra el sprite en "
+                            + "/software/ulpgc/chess/"
             );
-            placeholder.getStyleClass().add("artwork-placeholder");
-            placeholder.setWrapText(true);
-            placeholder.setMaxWidth(180);
-            placeholder.setAlignment(Pos.CENTER);
-            return placeholder;
         }
 
         Image sprite = new Image(imageUrl.toExternalForm());
@@ -308,14 +303,8 @@ public class ChessApplication extends Application {
 
         int totalFrames = 7;
 
-        if (sprite.getWidth() <= 0
-                || sprite.getHeight() <= 0
-                || sprite.getWidth() % totalFrames != 0) {
-
-            Label error = new Label(
-                    "El sprite debe contener 7 fotogramas "
-                            + "horizontales del mismo tamaño."
-            );
+        if (sprite.getWidth() <= 0 || sprite.getHeight() <= 0) {
+            Label error = new Label("No se han podido obtener las dimensiones del sprite.");
             error.getStyleClass().add("artwork-placeholder");
             return error;
         }

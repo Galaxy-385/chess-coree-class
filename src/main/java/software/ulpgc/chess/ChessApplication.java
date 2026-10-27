@@ -2,6 +2,7 @@ package software.ulpgc.chess;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,16 +25,15 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import javafx.scene.control.OverrunStyle;
-import javafx.scene.layout.Region;
-import javafx.beans.binding.Bindings;
-import javafx.scene.transform.Scale;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
 
 public class ChessApplication extends Application {
@@ -48,12 +48,18 @@ public class ChessApplication extends Application {
     private Label eyebrow;
     private ListView<MoveRecord> moveHistory;
 
+    private boolean cpuThinking = false;
+    private final Random random = new Random();
+
     private boolean chess960Mode = false;
+    private boolean chessAIrenaMode = false;
 
     private Button classicButton;
     private Button chess960Button;
+    private Button chessAIrenaButton;
 
     private Timeline chessAnimation;
+    private PauseTransition cpuPause;
 
     private final Set<Square> legalDestinations = new HashSet<>();
     private final Set<Square> captureDestinations = new HashSet<>();
@@ -68,11 +74,16 @@ public class ChessApplication extends Application {
             Color color
     ) {}
 
+    private record CpuMove(
+            Square from,
+            Square to,
+            Piece promotionPiece
+    ) {}
+
     @Override
     public void start(Stage stage) {
         game = new Game();
 
-        // Tamaño de referencia del diseño original.
         final double baseWidth = 1500;
         final double baseHeight = 820;
 
@@ -138,14 +149,27 @@ public class ChessApplication extends Application {
         chess960Button.getStyleClass().add("mode-button");
         chess960Button.setMaxWidth(Double.MAX_VALUE);
 
+        chessAIrenaButton = new Button("🤖   Chess AIrena");
+        chessAIrenaButton.getStyleClass().add("mode-button");
+        chessAIrenaButton.setMaxWidth(Double.MAX_VALUE);
+
         classicButton.setOnAction(event -> {
             chess960Mode = false;
+            chessAIrenaMode = false;
             updateModeButtons();
             newGame();
         });
 
         chess960Button.setOnAction(event -> {
             chess960Mode = true;
+            chessAIrenaMode = false;
+            updateModeButtons();
+            newGame();
+        });
+
+        chessAIrenaButton.setOnAction(event -> {
+            chess960Mode = false;
+            chessAIrenaMode = true;
             updateModeButtons();
             newGame();
         });
@@ -153,7 +177,8 @@ public class ChessApplication extends Application {
         extrasPanel.getChildren().addAll(
                 extrasTitle,
                 classicButton,
-                chess960Button
+                chess960Button,
+                chessAIrenaButton
         );
 
         VBox rightColumn = new VBox();
@@ -169,8 +194,6 @@ public class ChessApplication extends Application {
                 rightColumn
         );
 
-
-        // Contenedor que conserva el tamaño y la proporción originales.
         StackPane viewport = new StackPane(root);
         viewport.getStyleClass().add("app-viewport");
         viewport.setAlignment(Pos.CENTER);
@@ -179,35 +202,38 @@ public class ChessApplication extends Application {
         root.setPrefSize(baseWidth, baseHeight);
         root.setMaxSize(baseWidth, baseHeight);
 
-        Scale scale = new Scale(1, 1, baseWidth / 2, baseHeight / 2);
+        Scale scale = new Scale(
+                1, 1, baseWidth / 2, baseHeight / 2
+        );
         root.getTransforms().add(scale);
 
         root.setTranslateX(0);
         root.setTranslateY(0);
 
-        viewport.widthProperty().addListener((obs, oldWidth, newWidth) ->
-                updateScale(
-                        scale,
-                        viewport.getWidth(),
-                        viewport.getHeight(),
-                        baseWidth,
-                        baseHeight
-                )
+        viewport.widthProperty().addListener(
+                (obs, oldWidth, newWidth) ->
+                        updateScale(
+                                scale,
+                                viewport.getWidth(),
+                                viewport.getHeight(),
+                                baseWidth,
+                                baseHeight
+                        )
         );
 
-        viewport.heightProperty().addListener((obs, oldHeight, newHeight) ->
-                updateScale(
-                        scale,
-                        viewport.getWidth(),
-                        viewport.getHeight(),
-                        baseWidth,
-                        baseHeight
-                )
+        viewport.heightProperty().addListener(
+                (obs, oldHeight, newHeight) ->
+                        updateScale(
+                                scale,
+                                viewport.getWidth(),
+                                viewport.getHeight(),
+                                baseWidth,
+                                baseHeight
+                        )
         );
 
         Scene scene = new Scene(viewport, baseWidth, baseHeight);
         scene.setFill(javafx.scene.paint.Color.web("#171717"));
-
 
         var css = getClass().getResource("chess.css");
         if (css != null) {
@@ -232,7 +258,6 @@ public class ChessApplication extends Application {
         updateModeButtons();
     }
 
-
     private void updateScale(
             Scale scale,
             double availableWidth,
@@ -252,7 +277,6 @@ public class ChessApplication extends Application {
         scale.setX(factor);
         scale.setY(factor);
     }
-
 
     private Node createArtwork() {
         var imageUrl = getClass().getResource(
@@ -280,16 +304,29 @@ public class ChessApplication extends Application {
         }
 
         int totalFrames = 7;
-        int frameWidth = 310;
-        int frameHeight = 724;
+
+        if (sprite.getWidth() <= 0
+                || sprite.getHeight() <= 0
+                || sprite.getWidth() % totalFrames != 0) {
+
+            Label error = new Label(
+                    "El sprite debe contener 7 fotogramas "
+                            + "horizontales del mismo tamaño."
+            );
+            error.getStyleClass().add("artwork-placeholder");
+            return error;
+        }
+
+        int frameWidth = (int) (sprite.getWidth() / totalFrames);
+        int frameHeight = (int) sprite.getHeight();
 
         ImageView view = new ImageView(sprite);
         view.setViewport(new Rectangle2D(
                 0, 0, frameWidth, frameHeight
         ));
 
-        view.setFitWidth(180);
-        view.setFitHeight(100);
+        view.setFitWidth(40);
+        view.setFitHeight(76);
         view.setPreserveRatio(true);
         view.setSmooth(false);
 
@@ -297,7 +334,8 @@ public class ChessApplication extends Application {
 
         chessAnimation = new Timeline(
                 new KeyFrame(Duration.millis(120), event -> {
-                    currentFrame[0] = (currentFrame[0] + 1) % totalFrames;
+                    currentFrame[0] =
+                            (currentFrame[0] + 1) % totalFrames;
 
                     view.setViewport(new Rectangle2D(
                             currentFrame[0] * frameWidth,
@@ -317,8 +355,11 @@ public class ChessApplication extends Application {
     private void updateModeButtons() {
         classicButton.getStyleClass().remove("mode-button-selected");
         chess960Button.getStyleClass().remove("mode-button-selected");
+        chessAIrenaButton.getStyleClass().remove("mode-button-selected");
 
-        if (chess960Mode) {
+        if (chessAIrenaMode) {
+            chessAIrenaButton.getStyleClass().add("mode-button-selected");
+        } else if (chess960Mode) {
             chess960Button.getStyleClass().add("mode-button-selected");
         } else {
             classicButton.getStyleClass().add("mode-button-selected");
@@ -384,10 +425,12 @@ public class ChessApplication extends Application {
                 }
 
                 StackPane pieceIcon = PieceSprite.create(move.piece());
+
                 if (move.piece().type() != PieceType.Pawn) {
                     pieceIcon.setScaleX(0.85);
                     pieceIcon.setScaleY(0.85);
                 }
+
                 pieceIcon.setMinSize(28, 28);
                 pieceIcon.setPrefSize(28, 28);
                 pieceIcon.setMaxSize(28, 28);
@@ -400,7 +443,8 @@ public class ChessApplication extends Application {
                                 + move.to().rank().name().substring(1);
 
                 if (move.promotionPiece() != null) {
-                    movementText += " = " + move.promotionPiece().type();
+                    movementText += " = "
+                            + move.promotionPiece().type();
                 }
 
                 Label movement = new Label(" " + movementText);
@@ -495,6 +539,15 @@ public class ChessApplication extends Application {
         Square clickedSquare = squareAt(row, column);
         Piece clickedPiece = game.board().pieceAt(clickedSquare);
 
+        if (game.isGameOver() || cpuThinking) {
+            return;
+        }
+
+        // En Chess AIrena, el jugador controla las piezas blancas.
+        if (chessAIrenaMode && game.turn() == Color.Black) {
+            return;
+        }
+
         if (selectedSquare == null) {
             selectPiece(clickedSquare, clickedPiece);
             return;
@@ -569,6 +622,18 @@ public class ChessApplication extends Application {
             refreshBoard();
             updateGameStatus();
 
+            if (chessAIrenaMode
+                    && !game.isGameOver()
+                    && game.turn() == Color.Black) {
+
+                cpuThinking = true;
+                messageLabel.setText("Chess AIrena is thinking...");
+
+                cpuPause = new PauseTransition(Duration.millis(400));
+                cpuPause.setOnFinished(event -> playCpuMove());
+                cpuPause.play();
+            }
+
         } catch (IllegalArgumentException | IllegalStateException exception) {
             messageLabel.setText("That move is not legal.");
             clearSelection();
@@ -576,9 +641,275 @@ public class ChessApplication extends Application {
         }
     }
 
+    private List<CpuMove> getCpuLegalMoves() {
+        List<CpuMove> moves = new ArrayList<>();
+        Board board = game.board();
+
+        for (File fromFile : File.values()) {
+            for (Rank fromRank : Rank.values()) {
+                Square from = new Square(fromFile, fromRank);
+                Piece piece = board.pieceAt(from);
+
+                if (piece == null || piece.color() != Color.Black) {
+                    continue;
+                }
+
+                for (File toFile : File.values()) {
+                    for (Rank toRank : Rank.values()) {
+                        Square to = new Square(toFile, toRank);
+                        Piece promotion = null;
+
+                        if (piece.type() == PieceType.Pawn
+                                && to.rank() == Rank.R1) {
+                            promotion = Piece.BlackQueen;
+                        }
+
+                        try {
+                            board.legalMove(from, to, promotion);
+                            moves.add(new CpuMove(from, to, promotion));
+                        } catch (IllegalArgumentException exception) {
+                            // La CPU ignora los movimientos ilegales.
+                        }
+                    }
+                }
+            }
+        }
+
+        return moves;
+    }
+
+    private void playCpuMove() {
+        if (!chessAIrenaMode
+                || game.isGameOver()
+                || game.turn() != Color.Black) {
+            cpuThinking = false;
+            return;
+        }
+
+        List<CpuMove> moves = getCpuLegalMoves();
+
+        if (moves.isEmpty()) {
+            cpuThinking = false;
+            updateGameStatus();
+            return;
+        }
+
+        CpuMove move = chooseBestCpuMove(moves);
+        Piece movingPiece = game.board().pieceAt(move.from());
+
+        boolean capture = game.board().pieceAt(move.to()) != null
+                || (movingPiece.type() == PieceType.Pawn
+                && move.to().equals(game.board().enPassantTarget())
+                && !move.from().file().equals(move.to().file()));
+
+        try {
+            game.move(move.from(), move.to(), move.promotionPiece());
+
+            int moveNumber = moveHistory.getItems().size() / 2 + 1;
+
+            moveHistory.getItems().add(new MoveRecord(
+                    movingPiece,
+                    move.from(),
+                    move.to(),
+                    capture,
+                    move.promotionPiece(),
+                    moveNumber,
+                    Color.Black
+            ));
+
+            moveHistory.scrollTo(moveHistory.getItems().size() - 1);
+
+        } catch (IllegalArgumentException | IllegalStateException exception) {
+            messageLabel.setText("The CPU could not complete its move.");
+        } finally {
+            cpuThinking = false;
+            refreshBoard();
+            updateGameStatus();
+        }
+    }
+
+    /**
+     * CPU anterior: busca jaque mate inmediato y, si no lo encuentra,
+     * evalúa el material después de la peor respuesta de las blancas.
+     */
+    private CpuMove chooseBestCpuMove(List<CpuMove> moves) {
+        Board board = game.board();
+        CpuMove bestMove = null;
+        double bestScore = Double.NEGATIVE_INFINITY;
+
+        for (CpuMove move : moves) {
+            Board afterCpuMove;
+
+            try {
+                afterCpuMove = board.legalMove(
+                        move.from(),
+                        move.to(),
+                        move.promotionPiece()
+                );
+            } catch (IllegalArgumentException exception) {
+                continue;
+            }
+
+            Game position = new Game(afterCpuMove, Color.White);
+
+            // Si encuentra jaque mate inmediato, lo elige.
+            if (position.isCheckmate()) {
+                return move;
+            }
+
+            double score = evaluateMaterial(afterCpuMove);
+
+            // Analiza las respuestas legales de las blancas.
+            if (!position.isGameOver()) {
+                score = findWorstWhiteResponse(afterCpuMove);
+            }
+
+            // Desempata ligeramente entre movimientos equivalentes.
+            score += random.nextDouble() * 0.01;
+
+            if (bestMove == null || score > bestScore) {
+                bestScore = score;
+                bestMove = move;
+            }
+        }
+
+        return bestMove != null
+                ? bestMove
+                : moves.get(random.nextInt(moves.size()));
+    }
+
+    private double findWorstWhiteResponse(Board board) {
+        List<CpuMove> whiteMoves = getLegalMovesFor(
+                board,
+                Color.White
+        );
+
+        if (whiteMoves.isEmpty()) {
+            Game position = new Game(board, Color.White);
+
+            if (position.isCheckmate()) {
+                return 100000;
+            }
+
+            return evaluateMaterial(board);
+        }
+
+        double worstScore = Double.POSITIVE_INFINITY;
+
+        for (CpuMove move : whiteMoves) {
+            Board afterWhiteMove;
+
+            try {
+                afterWhiteMove = board.legalMove(
+                        move.from(),
+                        move.to(),
+                        move.promotionPiece()
+                );
+            } catch (IllegalArgumentException exception) {
+                continue;
+            }
+
+            Game position = new Game(afterWhiteMove, Color.Black);
+
+            double score;
+
+            if (position.isCheckmate()) {
+                // Las blancas han dado jaque mate a la CPU.
+                score = -100000;
+            } else {
+                score = evaluateMaterial(afterWhiteMove);
+            }
+
+            worstScore = Math.min(worstScore, score);
+        }
+
+        return worstScore == Double.POSITIVE_INFINITY
+                ? evaluateMaterial(board)
+                : worstScore;
+    }
+
+    private List<CpuMove> getLegalMovesFor(
+            Board board,
+            Color color
+    ) {
+        List<CpuMove> moves = new ArrayList<>();
+
+        for (File fromFile : File.values()) {
+            for (Rank fromRank : Rank.values()) {
+                Square from = new Square(fromFile, fromRank);
+                Piece piece = board.pieceAt(from);
+
+                if (piece == null || piece.color() != color) {
+                    continue;
+                }
+
+                for (File toFile : File.values()) {
+                    for (Rank toRank : Rank.values()) {
+                        Square to = new Square(toFile, toRank);
+                        Piece promotion = null;
+
+                        if (piece.type() == PieceType.Pawn
+                                && ((color == Color.White
+                                && to.rank() == Rank.R8)
+                                || (color == Color.Black
+                                && to.rank() == Rank.R1))) {
+
+                            promotion = color == Color.White
+                                    ? Piece.WhiteQueen
+                                    : Piece.BlackQueen;
+                        }
+
+                        try {
+                            board.legalMove(from, to, promotion);
+                            moves.add(new CpuMove(from, to, promotion));
+                        } catch (IllegalArgumentException exception) {
+                            // El destino no es legal.
+                        }
+                    }
+                }
+            }
+        }
+
+        return moves;
+    }
+
+    private double evaluateMaterial(Board board) {
+        double score = 0;
+
+        for (File file : File.values()) {
+            for (Rank rank : Rank.values()) {
+                Piece piece = board.pieceAt(new Square(file, rank));
+
+                if (piece == null) {
+                    continue;
+                }
+
+                double value = switch (piece.type()) {
+                    case Pawn -> 1;
+                    case Knight, Bishop -> 3;
+                    case Rook -> 5;
+                    case Queen -> 9;
+                    case King -> 0;
+                };
+
+                // Las puntuaciones positivas favorecen a la CPU (negras).
+                score += piece.color() == Color.Black
+                        ? value
+                        : -value;
+            }
+        }
+
+        return score;
+    }
+
     private void selectPiece(Square square, Piece piece) {
         if (piece == null || piece.color() != game.turn()) {
             messageLabel.setText("Select a piece of the current player.");
+            return;
+        }
+
+        if (chessAIrenaMode && piece.color() != Color.White) {
+            messageLabel.setText("You control the white pieces in AIrena.");
             return;
         }
 
@@ -590,6 +921,7 @@ public class ChessApplication extends Application {
                         + square.file().name().toLowerCase()
                         + square.rank().name().substring(1)
         );
+
         refreshBoard();
     }
 
@@ -619,6 +951,7 @@ public class ChessApplication extends Application {
                         && to.rank() == Rank.R8)
                         || (selectedPiece.color() == Color.Black
                         && to.rank() == Rank.R1))) {
+
                     promotionPiece = selectedPiece.color() == Color.White
                             ? Piece.WhiteQueen
                             : Piece.BlackQueen;
@@ -678,6 +1011,7 @@ public class ChessApplication extends Application {
         if (css != null) {
             dialog.getDialogPane().getStylesheets().add(css.toExternalForm());
         }
+
         dialog.getDialogPane().getStyleClass().add("promotion-dialog");
 
         Label title = new Label("PROMOTE YOUR PAWN");
@@ -753,6 +1087,7 @@ public class ChessApplication extends Application {
                 }
 
                 boolean light = (row + column) % 2 == 0;
+
                 button.getStyleClass().add(
                         light ? "light-square" : "dark-square"
                 );
@@ -788,14 +1123,21 @@ public class ChessApplication extends Application {
     private void updateGameStatus() {
         if (game.isCheckmate()) {
             turnLabel.setText("Checkmate");
+
             messageLabel.setText(
                     (game.turn() == Color.White ? "Black" : "White")
                             + " wins!"
             );
+
         } else if (game.isStalemate() || game.isDraw()) {
             turnLabel.setText("Draw");
             messageLabel.setText("The game has ended in a draw.");
+
         } else {
+            turnLabel.setText(
+                    game.turn() == Color.White ? "White" : "Black"
+            );
+
             messageLabel.setText(
                     game.turn() == Color.White
                             ? "White's turn."
@@ -805,6 +1147,13 @@ public class ChessApplication extends Application {
     }
 
     private void newGame() {
+        if (cpuPause != null) {
+            cpuPause.stop();
+            cpuPause = null;
+        }
+
+        cpuThinking = false;
+
         game = chess960Mode
                 ? new Game(Board.chess960())
                 : new Game();
@@ -813,11 +1162,17 @@ public class ChessApplication extends Application {
         moveHistory.getItems().clear();
 
         eyebrow.setText(
-                chess960Mode ? "CHESS / CHESS960" : "CHESS / CLASSIC"
+                chessAIrenaMode
+                        ? "CHESS / AI RENA"
+                        : chess960Mode
+                        ? "CHESS / CHESS960"
+                        : "CHESS / CLASSIC"
         );
 
         messageLabel.setText(
-                chess960Mode
+                chessAIrenaMode
+                        ? "Chess AIrena selected."
+                        : chess960Mode
                         ? "New Chess960 game started."
                         : "New classic game started."
         );
@@ -829,6 +1184,10 @@ public class ChessApplication extends Application {
     public void stop() {
         if (chessAnimation != null) {
             chessAnimation.stop();
+        }
+
+        if (cpuPause != null) {
+            cpuPause.stop();
         }
     }
 

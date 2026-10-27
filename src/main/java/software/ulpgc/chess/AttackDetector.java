@@ -79,8 +79,11 @@ public class AttackDetector {
         return pathIsClear(board, from, to);
     }
 
-    private boolean pathIsClear(
-            Board board, Square from, Square to) {
+    private boolean pathIsClear(Board board, Square from, Square to) {
+
+        if (from.equals(to)) {
+            return true;
+        }
 
         int fileStep = Integer.compare(
                 to.file().getSymbol(),

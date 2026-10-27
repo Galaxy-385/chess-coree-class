@@ -2,6 +2,7 @@
 package software.ulpgc.chess;
 
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.*;
 
 import java.util.Map;
 

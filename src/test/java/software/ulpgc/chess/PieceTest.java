@@ -1,6 +1,9 @@
 package software.ulpgc.chess;
 
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.Color;
+import software.ulpgc.chess.domain.Piece;
+import software.ulpgc.chess.domain.PieceType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

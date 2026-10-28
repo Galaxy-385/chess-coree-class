@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS games (
     room_id VARCHAR(100) NOT NULL UNIQUE
     REFERENCES rooms(id) ON DELETE CASCADE,
 
+    initial_board_state JSONB NOT NULL,
+    initial_turn VARCHAR(10) NOT NULL,
+
     board_state JSONB NOT NULL,
     turn VARCHAR(10) NOT NULL,
 
@@ -35,13 +38,12 @@ CREATE TABLE IF NOT EXISTS moves (
                                      game_id VARCHAR(100) NOT NULL
     REFERENCES games(id) ON DELETE CASCADE,
 
+    ply_number INTEGER NOT NULL,
     move_number INTEGER NOT NULL,
     from_square VARCHAR(2) NOT NULL,
     to_square VARCHAR(2) NOT NULL,
     promotion_piece VARCHAR(20),
+    played_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    played_at TIMESTAMP WITH TIME ZONE
-                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-                             UNIQUE (game_id, move_number)
+                             UNIQUE (game_id, ply_number)
     );

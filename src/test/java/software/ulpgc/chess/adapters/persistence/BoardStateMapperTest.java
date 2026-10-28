@@ -66,4 +66,34 @@ class BoardStateMapperTest {
             }
         }
     }
+
+
+    @Test
+    void shouldRestoreBoardWithEnPassantTarget() {
+        Board original = Board.initial()
+                .legalMove(Square.at("e2"), Square.at("e4"));
+
+        BoardStateMapper mapper = new BoardStateMapper();
+
+        Board restored = mapper.fromMap(
+                mapper.toMap(original),
+                original.castlingRights(),
+                original.enPassantTarget()
+        );
+
+        assertEquals(
+                original.enPassantTarget(),
+                restored.enPassantTarget()
+        );
+
+        assertEquals(
+                original.castlingRights().whiteKingSide(),
+                restored.castlingRights().whiteKingSide()
+        );
+
+        assertEquals(
+                original.castlingRights().blackQueenSide(),
+                restored.castlingRights().blackQueenSide()
+        );
+    }
 }

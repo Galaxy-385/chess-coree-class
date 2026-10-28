@@ -1,5 +1,8 @@
 package software.ulpgc.chess.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Game {
 
     private Board board;
@@ -7,6 +10,7 @@ public class Game {
     private final GameHistory history;
     private final HalfMoveClock halfMoveClock;
     private int fullMoveNumber;
+    private final List<PlayedMove> moves;
 
     public Game() {
         this.board = Board.initial();
@@ -14,6 +18,7 @@ public class Game {
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
         this.fullMoveNumber = 1;
+        this.moves = new ArrayList<>();
 
         history.recordPosition(board, turn);
     }
@@ -24,6 +29,7 @@ public class Game {
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
         this.fullMoveNumber = 1;
+        this.moves = new ArrayList<>();
 
         history.recordPosition(board, turn);
     }
@@ -34,6 +40,7 @@ public class Game {
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
         this.fullMoveNumber = 1;
+        this.moves = new ArrayList<>();
 
         history.recordPosition(board, turn);
     }
@@ -44,6 +51,14 @@ public class Game {
 
     public Color turn() {
         return turn;
+    }
+
+    public int halfMoveClock() {
+        return halfMoveClock.count();
+    }
+
+    public int fullMoveNumber() {
+        return fullMoveNumber;
     }
 
     public void move(Square from, Square to) {
@@ -60,6 +75,13 @@ public class Game {
         Piece capturedPiece = board.pieceAt(to);
 
         board = board.legalMove(from, to);
+
+        moves.add(new PlayedMove(
+                fullMoveNumber,
+                from,
+                to,
+                null
+        ));
 
         halfMoveClock.recordMove(piece, capturedPiece);
 
@@ -86,6 +108,13 @@ public class Game {
         Piece capturedPiece = board.pieceAt(to);
 
         board = board.legalMove(from, to, promotionPiece);
+
+        moves.add(new PlayedMove(
+                fullMoveNumber,
+                from,
+                to,
+                promotionPiece
+        ));
 
         halfMoveClock.recordMove(piece, capturedPiece);
 
@@ -128,5 +157,9 @@ public class Game {
 
     public boolean isGameOver() {
         return isCheckmate() || isDraw();
+    }
+
+    public List<PlayedMove> moves() {
+        return List.copyOf(moves);
     }
 }

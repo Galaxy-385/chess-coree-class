@@ -37,9 +37,7 @@
             <version>5.12.2</version>
             <scope>test</scope>
         </dependency>
-    </dependencies>
 
-    <dependencies>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>

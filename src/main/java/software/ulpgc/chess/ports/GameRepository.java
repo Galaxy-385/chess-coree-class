@@ -1,12 +1,13 @@
+
 package software.ulpgc.chess.ports;
 
-import  software.ulpgc.chess.domain.Game;
+import software.ulpgc.chess.domain.Game;
 
 import java.util.Optional;
 
 public interface GameRepository {
 
-    void save(Game game);
+    void save(String gameId, Game game);
 
-    Optional<Game> findByid(String gameId);
+    Optional<Game> findById(String gameId);
 }

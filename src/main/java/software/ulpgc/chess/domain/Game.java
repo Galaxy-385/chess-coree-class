@@ -11,37 +11,38 @@ public class Game {
     private final HalfMoveClock halfMoveClock;
     private int fullMoveNumber;
     private final List<PlayedMove> moves;
+    private final Board initialBoard;
 
     public Game() {
         this.board = Board.initial();
+        this.initialBoard = this.board;
         this.turn = Color.White;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
         this.fullMoveNumber = 1;
         this.moves = new ArrayList<>();
-
         history.recordPosition(board, turn);
     }
 
     public Game(Board board) {
         this.board = board;
+        this.initialBoard = board;
         this.turn = Color.White;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
         this.fullMoveNumber = 1;
         this.moves = new ArrayList<>();
-
         history.recordPosition(board, turn);
     }
 
     public Game(Board board, Color turn) {
         this.board = board;
+        this.initialBoard = board;
         this.turn = turn;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
         this.fullMoveNumber = 1;
         this.moves = new ArrayList<>();
-
         history.recordPosition(board, turn);
     }
 
@@ -59,6 +60,9 @@ public class Game {
 
     public int fullMoveNumber() {
         return fullMoveNumber;
+    }
+    public Board initialBoard() {
+        return initialBoard;
     }
 
     public void move(Square from, Square to) {
@@ -161,5 +165,20 @@ public class Game {
 
     public List<PlayedMove> moves() {
         return List.copyOf(moves);
+    }
+
+    public static Game restore(Board initialBoard, Color initialTurn,
+                               List<PlayedMove> moves) {
+        Game game = new Game(initialBoard, initialTurn);
+
+        for (PlayedMove move : moves) {
+            if (move.promotionPiece() == null) {
+                game.move(move.from(), move.to());
+            } else {
+                game.move(move.from(), move.to(), move.promotionPiece());
+            }
+        }
+
+        return game;
     }
 }

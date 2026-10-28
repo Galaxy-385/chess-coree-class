@@ -6,16 +6,18 @@ import java.util.List;
 public class Game {
 
     private Board board;
+    private final Board initialBoard;
+    private final Color initialTurn;
     private Color turn;
     private final GameHistory history;
     private final HalfMoveClock halfMoveClock;
     private int fullMoveNumber;
     private final List<PlayedMove> moves;
-    private final Board initialBoard;
 
     public Game() {
         this.board = Board.initial();
         this.initialBoard = this.board;
+        this.initialTurn = Color.White;
         this.turn = Color.White;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
@@ -27,6 +29,7 @@ public class Game {
     public Game(Board board) {
         this.board = board;
         this.initialBoard = board;
+        this.initialTurn = Color.White;
         this.turn = Color.White;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
@@ -38,6 +41,7 @@ public class Game {
     public Game(Board board, Color turn) {
         this.board = board;
         this.initialBoard = board;
+        this.initialTurn = turn;
         this.turn = turn;
         this.history = new GameHistory();
         this.halfMoveClock = new HalfMoveClock();
@@ -63,6 +67,10 @@ public class Game {
     }
     public Board initialBoard() {
         return initialBoard;
+    }
+
+    public Color initialTurn() {
+        return initialTurn;
     }
 
     public void move(Square from, Square to) {

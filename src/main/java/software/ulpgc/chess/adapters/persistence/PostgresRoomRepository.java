@@ -1,22 +1,28 @@
-
 package software.ulpgc.chess.adapters.persistence;
 
 import software.ulpgc.chess.domain.Game;
 import software.ulpgc.chess.domain.Room;
+import software.ulpgc.chess.ports.GameRepository;
 import software.ulpgc.chess.ports.RoomRepository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 import java.util.Optional;
 
 public class PostgresRoomRepository implements RoomRepository {
 
     private final PostgresConnection connection;
+    private final GameRepository gameRepository;
 
-    public PostgresRoomRepository(PostgresConnection connection) {
-        this.connection = connection;
+    public PostgresRoomRepository(
+            PostgresConnection connection,
+            GameRepository gameRepository
+    ) {
+        this.connection = Objects.requireNonNull(connection);
+        this.gameRepository = Objects.requireNonNull(gameRepository);
     }
 
     @Override
@@ -41,6 +47,8 @@ public class PostgresRoomRepository implements RoomRepository {
             throw new IllegalStateException(
                     "Could not save room " + room.id(), exception);
         }
+
+        gameRepository.save(room.id(), room.id(), room.game());
     }
 
     @Override
@@ -65,7 +73,11 @@ public class PostgresRoomRepository implements RoomRepository {
                 String whitePlayerId = result.getString("white_player_id");
                 String blackPlayerId = result.getString("black_player_id");
 
-                Room room = new Room(id, whitePlayerId, new Game());
+                Game game = gameRepository.findById(id)
+                        .orElseThrow(() -> new IllegalStateException(
+                                "Game not found for room " + id));
+
+                Room room = new Room(id, whitePlayerId, game);
 
                 if (blackPlayerId != null) {
                     room.join(blackPlayerId);

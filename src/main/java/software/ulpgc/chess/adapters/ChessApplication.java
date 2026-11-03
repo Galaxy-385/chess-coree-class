@@ -9,12 +9,7 @@ import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.ColumnConstraints;
@@ -30,8 +25,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import software.ulpgc.chess.adapters.http.RoomApiClient;
 import software.ulpgc.chess.domain.*;
-import javafx.scene.control.OverrunStyle;
-import javafx.scene.layout.Region;
+import javafx.scene.control.TextInputDialog;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -79,6 +73,17 @@ public class ChessApplication extends Application {
     private final Set<Square> legalDestinations = new HashSet<>();
     private final Set<Square> captureDestinations = new HashSet<>();
 
+    private Label roomNameLabel;
+    private Label user1Label;
+    private Label user2Label;
+
+    private static final String USER_ID_KEY = "userId";
+
+    private final java.util.prefs.Preferences preferences =
+            java.util.prefs.Preferences.userNodeForPackage(ChessApplication.class);
+
+    private Button changeUserIdButton;
+
     private record MoveRecord(
             Piece piece,
             Square from,
@@ -101,6 +106,15 @@ public class ChessApplication extends Application {
 
         roomApiClient = new RoomApiClient("http://localhost:8080");
 
+        onlinePlayerId = preferences.get(USER_ID_KEY, null);
+
+        while (onlinePlayerId == null || onlinePlayerId.isBlank()) {
+            onlinePlayerId = askForUserId(null);
+
+            if (onlinePlayerId != null) {
+                preferences.put(USER_ID_KEY, onlinePlayerId);
+            }
+        }
         final double baseWidth = 1500;
         final double baseHeight = 820;
 
@@ -155,6 +169,18 @@ public class ChessApplication extends Application {
         extrasPanel.getStyleClass().add("extras-panel");
         extrasPanel.setPadding(new Insets(18));
 
+        roomNameLabel = new Label("No room selected");
+        user1Label = new Label("user1:");
+        user2Label = new Label("user2:");
+
+        roomNameLabel.getStyleClass().add("room-name-label");
+        user1Label.getStyleClass().add("room-player-label");
+        user2Label.getStyleClass().add("room-player-label");
+
+        roomNameLabel.setWrapText(true);
+        user1Label.setWrapText(true);
+        user2Label.setWrapText(true);
+
         Label extrasTitle = new Label("GAME-MODES");
         extrasTitle.getStyleClass().add("section-label");
 
@@ -177,6 +203,14 @@ public class ChessApplication extends Application {
         joinRoomButton = new Button("🔗   Join Online Room");
         joinRoomButton.getStyleClass().add("mode-button");
         joinRoomButton.setMaxWidth(Double.MAX_VALUE);
+
+        changeUserIdButton = new Button("✏   Change User ID");
+        changeUserIdButton.getStyleClass().add("mode-button");
+        changeUserIdButton.setMaxWidth(Double.MAX_VALUE);
+
+        changeUserIdButton.setOnAction(event -> changeUserId());
+
+        joinRoomButton.setOnAction(event -> joinOnlineRoom());
 
         createRoomButton.setOnAction(event -> createOnlineRoom());
 
@@ -203,11 +237,15 @@ public class ChessApplication extends Application {
 
         extrasPanel.getChildren().addAll(
                 extrasTitle,
+                changeUserIdButton,
                 classicButton,
                 chess960Button,
                 chessAIrenaButton,
                 createRoomButton,
-                joinRoomButton
+                joinRoomButton,
+                roomNameLabel,
+                user1Label,
+                user2Label
         );
 
         VBox rightColumn = new VBox();
@@ -1209,23 +1247,18 @@ public class ChessApplication extends Application {
     }
 
     private void createOnlineRoom() {
-        Dialog<String[]> dialog = new Dialog<>();
+        Dialog<String> dialog = new Dialog<>();
+        configureDialog(dialog);
+
         dialog.setTitle("Create Online Room");
-        dialog.setHeaderText("Enter your room and player IDs");
+        dialog.setHeaderText("Enter the room ID");
 
-        javafx.scene.control.TextField roomField =
-                new javafx.scene.control.TextField();
+        TextField roomField = new TextField();
         roomField.setPromptText("Room ID");
-
-        javafx.scene.control.TextField playerField =
-                new javafx.scene.control.TextField();
-        playerField.setPromptText("Player ID");
 
         VBox content = new VBox(10,
                 new Label("Room ID:"),
-                roomField,
-                new Label("Player ID:"),
-                playerField
+                roomField
         );
 
         content.setPadding(new Insets(15));
@@ -1238,35 +1271,32 @@ public class ChessApplication extends Application {
 
         dialog.setResultConverter(button -> {
             if (button == ButtonType.OK) {
-                return new String[]{
-                        roomField.getText().trim(),
-                        playerField.getText().trim()
-                };
+                return roomField.getText().trim();
             }
             return null;
         });
 
-        Optional<String[]> result = dialog.showAndWait();
+        Optional<String> result = dialog.showAndWait();
 
         if (result.isEmpty()) {
             return;
         }
 
-        String roomId = result.get()[0];
-        String playerId = result.get()[1];
+        String roomId = result.get();
 
-        if (roomId.isEmpty() || playerId.isEmpty()) {
-            messageLabel.setText("Room ID and Player ID are required.");
+        if (roomId.isEmpty()) {
+            messageLabel.setText("Room ID is required.");
             return;
         }
 
         try {
-            roomApiClient.createRoom(roomId, playerId);
+            roomApiClient.createRoom(roomId, onlinePlayerId);
 
             onlineRoomId = roomId;
-            onlinePlayerId = playerId;
             onlinePlayerColor = Color.White;
             onlineMode = true;
+
+            refreshOnlineRoomInfo();
 
             game = new Game();
             clearSelection();
@@ -1293,13 +1323,12 @@ public class ChessApplication extends Application {
         } catch (java.io.IOException exception) {
             exception.printStackTrace();
             messageLabel.setText(
-                    "Could not communicate with the server: "
-                            + exception
+                    "Could not communicate with the server: " + exception
             );
-        }catch (InterruptedException exception) {
+
+        } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             messageLabel.setText("The server request was interrupted.");
-
 
         } catch (RuntimeException exception) {
             messageLabel.setText(
@@ -1307,6 +1336,199 @@ public class ChessApplication extends Application {
                             + exception.getMessage()
             );
         }
+    }
+
+    private void joinOnlineRoom() {
+        Dialog<String> dialog = new Dialog<>();
+        configureDialog(dialog);
+
+        dialog.setTitle("Join Online Room");
+        dialog.setHeaderText("Enter the room ID");
+
+        ButtonType joinButtonType = new ButtonType(
+                "Join",
+                ButtonBar.ButtonData.OK_DONE
+        );
+
+        dialog.getDialogPane().getButtonTypes().addAll(
+                joinButtonType,
+                ButtonType.CANCEL
+        );
+
+        TextField roomIdField = new TextField();
+        roomIdField.setPromptText("Room ID");
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        grid.add(new Label("Room ID:"), 0, 0);
+        grid.add(roomIdField, 1, 0);
+
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(button -> {
+            if (button == joinButtonType) {
+                return roomIdField.getText().trim();
+            }
+            return null;
+        });
+
+        dialog.showAndWait().ifPresent(roomId -> {
+
+            if (roomId.isEmpty()) {
+                messageLabel.setText("Room ID is required.");
+                return;
+            }
+
+            try {
+                roomApiClient.joinRoom(roomId, onlinePlayerId);
+
+                onlineRoomId = roomId;
+                onlinePlayerColor = Color.Black;
+                onlineMode = true;
+
+                refreshOnlineRoomInfo();
+
+                game = new Game();
+                clearSelection();
+                moveHistory.getItems().clear();
+
+                eyebrow.setText("CHESS / ONLINE");
+                messageLabel.setText(
+                        "Joined room successfully. Waiting for the game to start."
+                );
+
+                refreshBoard();
+
+            } catch (RoomApiClient.ApiException exception) {
+                String error = exception.getMessage() == null
+                        ? ""
+                        : exception.getMessage().toLowerCase();
+
+                if (error.contains("already")) {
+                    messageLabel.setText(
+                            "This user is already in the room."
+                    );
+
+                } else if (exception.statusCode() == 409) {
+                    messageLabel.setText(
+                            "The room is full or the request conflicts with its current state."
+                    );
+
+                } else if (exception.statusCode() == 404) {
+                    messageLabel.setText("Room not found.");
+
+                } else {
+                    messageLabel.setText(
+                            "Could not join room. HTTP "
+                                    + exception.statusCode()
+                                    + ": "
+                                    + exception.getMessage()
+                    );
+                }
+
+            } catch (java.io.IOException exception) {
+                exception.printStackTrace();
+                messageLabel.setText(
+                        "Could not communicate with the server: " + exception
+                );
+
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                messageLabel.setText(
+                        "The server request was interrupted."
+                );
+
+            } catch (RuntimeException exception) {
+                messageLabel.setText(
+                        "Could not connect to the server: "
+                                + exception.getMessage()
+                );
+            }
+        });
+    }
+
+    private void refreshOnlineRoomInfo() {
+        try {
+            var room = roomApiClient.getRoom(onlineRoomId);
+
+            roomNameLabel.setText("Room: " + room.roomId());
+
+            user1Label.setText(
+                    "user1: " + (room.whitePlayerId() == null
+                            ? ""
+                            : room.whitePlayerId())
+            );
+
+            user2Label.setText(
+                    "user2: " + (room.blackPlayerId() == null
+                            ? ""
+                            : room.blackPlayerId())
+            );
+
+        } catch (java.io.IOException exception) {
+            exception.printStackTrace();
+            messageLabel.setText("Could not load room information.");
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            messageLabel.setText("Room information request interrupted.");
+        } catch (RuntimeException exception) {
+            messageLabel.setText(
+                    "Could not load room: " + exception.getMessage()
+            );
+        }
+    }
+
+    private String askForUserId(String currentUserId) {
+        TextInputDialog dialog = new TextInputDialog(
+                currentUserId == null ? "" : currentUserId
+        );
+
+        configureDialog(dialog);
+
+        dialog.setTitle("User ID");
+        dialog.setHeaderText("Identify yourself");
+        dialog.setContentText("Enter your user ID:");
+
+        return dialog.showAndWait()
+                .map(String::trim)
+                .filter(id -> !id.isEmpty())
+                .orElse(null);
+    }
+
+    private void changeUserId() {
+        if (onlineMode) {
+            messageLabel.setText(
+                    "Leave the current online session before changing your ID."
+            );
+            return;
+        }
+
+        String newUserId = askForUserId(onlinePlayerId);
+
+        if (newUserId == null) {
+            return;
+        }
+
+        onlinePlayerId = newUserId;
+        preferences.put(USER_ID_KEY, onlinePlayerId);
+
+        messageLabel.setText("User ID changed to: " + onlinePlayerId);
+    }
+
+    private void configureDialog(Dialog<?> dialog) {
+        var css = getClass().getResource(
+                "/software/ulpgc/chess/chess.css"
+        );
+
+        if (css != null) {
+            dialog.getDialogPane()
+                    .getStylesheets()
+                    .add(css.toExternalForm());
+        }
+
+        dialog.getDialogPane().getStyleClass().add("chess-dialog");
     }
 
     @Override

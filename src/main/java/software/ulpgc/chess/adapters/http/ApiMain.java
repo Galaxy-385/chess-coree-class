@@ -8,6 +8,7 @@ import software.ulpgc.chess.adapters.persistence.PostgresRoomRepository;
 import software.ulpgc.chess.application.CreateRoom;
 import software.ulpgc.chess.application.JoinRoom;
 import software.ulpgc.chess.application.GetRoom;
+import software.ulpgc.chess.application.PlayMove;
 
 
 import java.io.IOException;
@@ -51,9 +52,11 @@ public class ApiMain {
 
         GetRoom getRoom = new GetRoom(roomRepository);
 
+        PlayMove playMove = new PlayMove(roomRepository);
+
         server.createContext(
                 "/rooms",
-                new RoomController(createRoom, joinRoom, getRoom)
+                new RoomController(createRoom, joinRoom, getRoom, playMove)
         );
 
         server.start();

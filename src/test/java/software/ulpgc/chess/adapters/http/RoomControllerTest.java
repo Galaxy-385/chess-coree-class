@@ -184,9 +184,9 @@ class RoomControllerTest {
                 """
         );
 
-        // JoinRoom.execute uses IllegalArgumentException
+        // JoinRoom.execute uses RoomNotFoundException
         // when the room does not exist.
-        assertEquals(400, response.statusCode());
+        assertEquals(404, response.statusCode());
     }
 
     @Test

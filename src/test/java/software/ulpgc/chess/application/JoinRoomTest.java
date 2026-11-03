@@ -56,7 +56,7 @@ class JoinRoomTest {
     @Test
     void shouldRejectNonexistentRoom() {
         assertThrows(
-                IllegalArgumentException.class,
+                RoomNotFoundException.class,
                 () -> joinRoom.execute("room-404", "player-2")
         );
     }

@@ -28,7 +28,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.transform.Scale;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import software.ulpgc.chess.adapters.http.RoomApiClient;
 import software.ulpgc.chess.domain.*;
+import javafx.scene.control.OverrunStyle;
+import javafx.scene.layout.Region;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,6 +43,15 @@ import java.util.Set;
 public class ChessApplication extends Application {
 
     private Game game;
+
+    private RoomApiClient roomApiClient;
+
+    private String onlineRoomId;
+    private String onlinePlayerId;
+
+    private Color onlinePlayerColor;
+
+    private boolean onlineMode = false;
 
     private final Button[][] squares = new Button[8][8];
 
@@ -58,6 +70,8 @@ public class ChessApplication extends Application {
     private Button classicButton;
     private Button chess960Button;
     private Button chessAIrenaButton;
+    private Button createRoomButton;
+    private Button joinRoomButton;
 
     private Timeline chessAnimation;
     private PauseTransition cpuPause;
@@ -84,6 +98,8 @@ public class ChessApplication extends Application {
     @Override
     public void start(Stage stage) {
         game = new Game();
+
+        roomApiClient = new RoomApiClient("http://localhost:8080");
 
         final double baseWidth = 1500;
         final double baseHeight = 820;
@@ -154,6 +170,16 @@ public class ChessApplication extends Application {
         chessAIrenaButton.getStyleClass().add("mode-button");
         chessAIrenaButton.setMaxWidth(Double.MAX_VALUE);
 
+        createRoomButton = new Button("🌐   Create Online Room");
+        createRoomButton.getStyleClass().add("mode-button");
+        createRoomButton.setMaxWidth(Double.MAX_VALUE);
+
+        joinRoomButton = new Button("🔗   Join Online Room");
+        joinRoomButton.getStyleClass().add("mode-button");
+        joinRoomButton.setMaxWidth(Double.MAX_VALUE);
+
+        createRoomButton.setOnAction(event -> createOnlineRoom());
+
         classicButton.setOnAction(event -> {
             chess960Mode = false;
             chessAIrenaMode = false;
@@ -179,7 +205,9 @@ public class ChessApplication extends Application {
                 extrasTitle,
                 classicButton,
                 chess960Button,
-                chessAIrenaButton
+                chessAIrenaButton,
+                createRoomButton,
+                joinRoomButton
         );
 
         VBox rightColumn = new VBox();
@@ -389,6 +417,12 @@ public class ChessApplication extends Application {
         messageLabel = new Label("Select a piece to begin.");
         messageLabel.getStyleClass().add("message-label");
         messageLabel.setWrapText(true);
+        messageLabel.setWrapText(true);
+        messageLabel.setMinWidth(250);
+        messageLabel.setPrefWidth(250);
+        messageLabel.setMaxWidth(250);
+        messageLabel.setMinHeight(Region.USE_PREF_SIZE);
+        messageLabel.setTextOverrun(OverrunStyle.CLIP);
 
         Button newGameButton = new Button("New game");
         newGameButton.getStyleClass().add("primary-button");
@@ -1172,6 +1206,107 @@ public class ChessApplication extends Application {
         );
 
         refreshBoard();
+    }
+
+    private void createOnlineRoom() {
+        Dialog<String[]> dialog = new Dialog<>();
+        dialog.setTitle("Create Online Room");
+        dialog.setHeaderText("Enter your room and player IDs");
+
+        javafx.scene.control.TextField roomField =
+                new javafx.scene.control.TextField();
+        roomField.setPromptText("Room ID");
+
+        javafx.scene.control.TextField playerField =
+                new javafx.scene.control.TextField();
+        playerField.setPromptText("Player ID");
+
+        VBox content = new VBox(10,
+                new Label("Room ID:"),
+                roomField,
+                new Label("Player ID:"),
+                playerField
+        );
+
+        content.setPadding(new Insets(15));
+        dialog.getDialogPane().setContent(content);
+
+        dialog.getDialogPane().getButtonTypes().addAll(
+                ButtonType.OK,
+                ButtonType.CANCEL
+        );
+
+        dialog.setResultConverter(button -> {
+            if (button == ButtonType.OK) {
+                return new String[]{
+                        roomField.getText().trim(),
+                        playerField.getText().trim()
+                };
+            }
+            return null;
+        });
+
+        Optional<String[]> result = dialog.showAndWait();
+
+        if (result.isEmpty()) {
+            return;
+        }
+
+        String roomId = result.get()[0];
+        String playerId = result.get()[1];
+
+        if (roomId.isEmpty() || playerId.isEmpty()) {
+            messageLabel.setText("Room ID and Player ID are required.");
+            return;
+        }
+
+        try {
+            roomApiClient.createRoom(roomId, playerId);
+
+            onlineRoomId = roomId;
+            onlinePlayerId = playerId;
+            onlinePlayerColor = Color.White;
+            onlineMode = true;
+
+            game = new Game();
+            clearSelection();
+            moveHistory.getItems().clear();
+
+            eyebrow.setText("CHESS / ONLINE");
+            messageLabel.setText(
+                    "Room created successfully. Waiting for another player."
+            );
+
+            messageLabel.setWrapText(true);
+            messageLabel.setMaxWidth(250);
+
+            refreshBoard();
+
+        } catch (RoomApiClient.ApiException exception) {
+            messageLabel.setText(
+                    "Could not create room. HTTP "
+                            + exception.statusCode()
+                            + ": "
+                            + exception.getMessage()
+            );
+
+        } catch (java.io.IOException exception) {
+            exception.printStackTrace();
+            messageLabel.setText(
+                    "Could not communicate with the server: "
+                            + exception
+            );
+        }catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            messageLabel.setText("The server request was interrupted.");
+
+
+        } catch (RuntimeException exception) {
+            messageLabel.setText(
+                    "Could not connect to the server: "
+                            + exception.getMessage()
+            );
+        }
     }
 
     @Override

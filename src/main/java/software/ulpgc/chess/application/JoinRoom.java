@@ -27,7 +27,7 @@ public class JoinRoom {
         }
 
         Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new RoomNotFoundException(
                         "Room does not exist"
                 ));
 

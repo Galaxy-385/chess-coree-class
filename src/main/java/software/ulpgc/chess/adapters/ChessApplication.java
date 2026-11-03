@@ -45,6 +45,8 @@ public class ChessApplication extends Application {
 
     private Color onlinePlayerColor;
 
+    private Button leaveRoomButton;
+
     private boolean onlineMode = false;
 
     private final Button[][] squares = new Button[8][8];
@@ -208,6 +210,13 @@ public class ChessApplication extends Application {
         changeUserIdButton.getStyleClass().add("mode-button");
         changeUserIdButton.setMaxWidth(Double.MAX_VALUE);
 
+        leaveRoomButton = new Button("↩   Leave Online Room");
+        leaveRoomButton.getStyleClass().add("mode-button");
+        leaveRoomButton.setMaxWidth(Double.MAX_VALUE);
+        leaveRoomButton.setDisable(true);
+
+        leaveRoomButton.setOnAction(event -> leaveOnlineRoom());
+
         changeUserIdButton.setOnAction(event -> changeUserId());
 
         joinRoomButton.setOnAction(event -> joinOnlineRoom());
@@ -243,6 +252,7 @@ public class ChessApplication extends Application {
                 chessAIrenaButton,
                 createRoomButton,
                 joinRoomButton,
+                leaveRoomButton,
                 roomNameLabel,
                 user1Label,
                 user2Label
@@ -599,24 +609,55 @@ public class ChessApplication extends Application {
         return boardView;
     }
 
-    private void handleSquareClick(int row, int column) {
-        Square clickedSquare = squareAt(row, column);
-        Piece clickedPiece = game.board().pieceAt(clickedSquare);
 
+
+    private void handleSquareClick(int row, int column) {
         if (game.isGameOver() || cpuThinking) {
             return;
         }
 
-        // En Chess AIrena, el jugador controla las piezas blancas.
+        Square clickedSquare = squareAt(row, column);
+
+        // En online, actualizamos el tablero antes de empezar una selección.
+        // Si ya hay una pieza seleccionada, conservamos esa selección
+        // para poder pulsar su casilla de destino.
+        if (onlineMode && selectedSquare == null) {
+            try {
+                loadOnlineGame();
+            } catch (Exception exception) {
+                messageLabel.setText(
+                        "Could not refresh online game: "
+                                + exception.getMessage()
+                );
+                return;
+            }
+
+            if (game.isGameOver()) {
+                return;
+            }
+
+            if (game.turn() != onlinePlayerColor) {
+                messageLabel.setText(
+                        "Waiting for your opponent's move."
+                );
+                return;
+            }
+        }
+
+        // En Chess AIrena, el usuario controla las piezas blancas.
         if (chessAIrenaMode && game.turn() == Color.Black) {
             return;
         }
 
+        Piece clickedPiece = game.board().pieceAt(clickedSquare);
+
+        // Todavía no hay una pieza seleccionada.
         if (selectedSquare == null) {
             selectPiece(clickedSquare, clickedPiece);
             return;
         }
 
+        // Si pulsamos de nuevo la misma casilla, cancelamos la selección.
         if (selectedSquare.equals(clickedSquare)) {
             clearSelection();
             messageLabel.setText("Selection cancelled.");
@@ -624,11 +665,13 @@ public class ChessApplication extends Application {
             return;
         }
 
+        // Si pulsamos otra pieza propia, seleccionamos esa pieza.
         if (clickedPiece != null && clickedPiece.color() == game.turn()) {
             selectPiece(clickedSquare, clickedPiece);
             return;
         }
 
+        // La casilla vacía o rival debe ser un destino legal.
         if (!legalDestinations.contains(clickedSquare)) {
             messageLabel.setText("That move is not legal.");
             return;
@@ -638,6 +681,13 @@ public class ChessApplication extends Application {
             Square from = selectedSquare;
             Color movingColor = game.turn();
             Piece movingPiece = game.board().pieceAt(from);
+
+            if (movingPiece == null) {
+                clearSelection();
+                refreshBoard();
+                messageLabel.setText("The selected piece no longer exists.");
+                return;
+            }
 
             boolean isCapture = captureDestinations.contains(clickedSquare);
             Piece promotionPiece = null;
@@ -662,6 +712,25 @@ public class ChessApplication extends Application {
                 promotionPiece = choice.get();
             }
 
+            if (onlineMode) {
+                roomApiClient.playMove(
+                        onlineRoomId,
+                        onlinePlayerId,
+                        squareName(from),
+                        squareName(clickedSquare),
+                        promotionPiece == null
+                                ? null
+                                : promotionPiece.name()
+                );
+
+                // Después de guardar el movimiento, recuperamos el estado
+                // real del servidor y actualizamos el historial.
+                loadOnlineGame();
+                messageLabel.setText("Move saved successfully.");
+                return;
+            }
+
+            // Partidas locales.
             if (promotionPiece == null) {
                 game.move(from, clickedSquare);
             } else {
@@ -698,12 +767,40 @@ public class ChessApplication extends Application {
                 cpuPause.play();
             }
 
+        } catch (RoomApiClient.ApiException exception) {
+            messageLabel.setText(
+                    "Server rejected the move (HTTP "
+                            + exception.statusCode()
+                            + "): "
+                            + exception.getMessage()
+            );
+            clearSelection();
+            refreshBoard();
+
+        } catch (java.io.IOException exception) {
+            messageLabel.setText(
+                    "Could not communicate with the server: "
+                            + exception.getMessage()
+            );
+            clearSelection();
+            refreshBoard();
+
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            messageLabel.setText("The server request was interrupted.");
+            clearSelection();
+            refreshBoard();
+
         } catch (IllegalArgumentException | IllegalStateException exception) {
-            messageLabel.setText("That move is not legal.");
+            messageLabel.setText(
+                    "That move is not legal: " + exception.getMessage()
+            );
             clearSelection();
             refreshBoard();
         }
     }
+
+
 
     private List<CpuMove> getCpuLegalMoves() {
         List<CpuMove> moves = new ArrayList<>();
@@ -1296,11 +1393,11 @@ public class ChessApplication extends Application {
             onlinePlayerColor = Color.White;
             onlineMode = true;
 
+            leaveRoomButton.setDisable(false);
+
             refreshOnlineRoomInfo();
 
-            game = new Game();
-            clearSelection();
-            moveHistory.getItems().clear();
+            loadOnlineGame();
 
             eyebrow.setText("CHESS / ONLINE");
             messageLabel.setText(
@@ -1382,43 +1479,44 @@ public class ChessApplication extends Application {
             }
 
             try {
-                roomApiClient.joinRoom(roomId, onlinePlayerId);
+                var room = roomApiClient.joinRoom(roomId, onlinePlayerId);
 
                 onlineRoomId = roomId;
-                onlinePlayerColor = Color.Black;
+
+                // Recuperamos el color que ya tiene el usuario en esa sala.
+                if (onlinePlayerId.equals(room.whitePlayerId())) {
+                    onlinePlayerColor = Color.White;
+                } else if (onlinePlayerId.equals(room.blackPlayerId())) {
+                    onlinePlayerColor = Color.Black;
+                } else {
+                    messageLabel.setText(
+                            "Could not determine your player color."
+                    );
+                    return;
+                }
+
                 onlineMode = true;
+
+                leaveRoomButton.setDisable(false);
 
                 refreshOnlineRoomInfo();
 
-                game = new Game();
-                clearSelection();
-                moveHistory.getItems().clear();
+                loadOnlineGame();
 
                 eyebrow.setText("CHESS / ONLINE");
+
                 messageLabel.setText(
-                        "Joined room successfully. Waiting for the game to start."
+                        "Entered room successfully. You are playing "
+                                + onlinePlayerColor + "."
                 );
 
                 refreshBoard();
 
             } catch (RoomApiClient.ApiException exception) {
-                String error = exception.getMessage() == null
-                        ? ""
-                        : exception.getMessage().toLowerCase();
-
-                if (error.contains("already")) {
-                    messageLabel.setText(
-                            "This user is already in the room."
-                    );
-
-                } else if (exception.statusCode() == 409) {
-                    messageLabel.setText(
-                            "The room is full or the request conflicts with its current state."
-                    );
-
+                if (exception.statusCode() == 409) {
+                    messageLabel.setText("The room is full.");
                 } else if (exception.statusCode() == 404) {
                     messageLabel.setText("Room not found.");
-
                 } else {
                     messageLabel.setText(
                             "Could not join room. HTTP "
@@ -1529,6 +1627,108 @@ public class ChessApplication extends Application {
         }
 
         dialog.getDialogPane().getStyleClass().add("chess-dialog");
+    }
+
+
+    private String squareName(Square square) {
+        return square.file().name().toLowerCase()
+                + square.rank().name().substring(1);
+    }
+
+    private void loadOnlineGame()
+            throws java.io.IOException, InterruptedException {
+
+        var history = roomApiClient.getMoves(onlineRoomId);
+
+        Game restoredGame = new Game();
+        List<MoveRecord> restoredHistory = new ArrayList<>();
+
+        for (var move : history.moves()) {
+            Square from = Square.at(move.from());
+            Square to = Square.at(move.to());
+
+            Color movingColor = restoredGame.turn();
+            Piece movingPiece = restoredGame.board().pieceAt(from);
+
+            if (movingPiece == null) {
+                throw new IllegalStateException(
+                        "Invalid saved history: no piece at " + move.from()
+                );
+            }
+
+            Piece targetPiece = restoredGame.board().pieceAt(to);
+
+            boolean capture = targetPiece != null
+                    || (movingPiece.type() == PieceType.Pawn
+                    && to.equals(restoredGame.board().enPassantTarget())
+                    && !from.file().equals(to.file()));
+
+            Piece promotionPiece = move.promotionPiece() == null
+                    || move.promotionPiece().isBlank()
+                    ? null
+                    : Piece.valueOf(move.promotionPiece());
+
+            if (promotionPiece == null) {
+                restoredGame.move(from, to);
+            } else {
+                restoredGame.move(from, to, promotionPiece);
+            }
+
+            restoredHistory.add(new MoveRecord(
+                    movingPiece,
+                    from,
+                    to,
+                    capture,
+                    promotionPiece,
+                    move.moveNumber(),
+                    movingColor
+            ));
+        }
+
+        game = restoredGame;
+
+        moveHistory.getItems().setAll(restoredHistory);
+
+        if (!restoredHistory.isEmpty()) {
+            moveHistory.scrollTo(restoredHistory.size() - 1);
+        }
+
+        clearSelection();
+        refreshBoard();
+        updateGameStatus();
+    }
+
+
+    private void leaveOnlineRoom() {
+        if (!onlineMode) {
+            messageLabel.setText("You are not in an online room.");
+            return;
+        }
+
+        // Salimos del modo online, pero no borramos la sala del servidor.
+        onlineMode = false;
+        onlineRoomId = null;
+        onlinePlayerColor = null;
+
+        clearSelection();
+
+        // Restauramos una partida local nueva.
+        game = new Game();
+        moveHistory.getItems().clear();
+
+        roomNameLabel.setText("No room selected");
+        user1Label.setText("user1:");
+        user2Label.setText("user2:");
+
+        leaveRoomButton.setDisable(true);
+
+        eyebrow.setText("CHESS / CLASSIC");
+        messageLabel.setText(
+                "You left the online room."
+        );
+
+        refreshBoard();
+        updateModeButtons();
     }
 
     @Override

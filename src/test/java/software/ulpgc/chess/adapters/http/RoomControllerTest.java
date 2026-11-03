@@ -207,7 +207,7 @@ class RoomControllerTest {
     }
 
     @Test
-    void shouldRejectWhitePlayerJoiningAgain() throws Exception {
+    void shouldAllowWhitePlayerToJoinAgain() throws Exception {
         createRoom("room-1", "player-1");
 
         HttpResponse<String> response = post(
@@ -219,7 +219,13 @@ class RoomControllerTest {
                 """
         );
 
-        assertEquals(400, response.statusCode());
+        assertEquals(200, response.statusCode());
+
+        JsonNode json = mapper.readTree(response.body());
+
+        assertEquals("room-1", json.get("roomId").asText());
+        assertEquals("player-1", json.get("whitePlayerId").asText());
+        assertTrue(json.get("blackPlayerId").isNull());
     }
 
     // --------------------------------------------------

@@ -1,4 +1,3 @@
-
 package software.ulpgc.chess.domain;
 
 import java.util.Objects;
@@ -40,16 +39,18 @@ public class Room {
     public void join(String playerId) {
         Objects.requireNonNull(playerId);
 
+        // Si ya pertenece a la sala, permitimos que vuelva a entrar.
+        if (whitePlayerId.equals(playerId)
+                || playerId.equals(blackPlayerId)) {
+            return;
+        }
+
+        // Si no pertenece y la sala está llena, no puede entrar.
         if (isFull()) {
             throw new IllegalStateException("The room is full");
         }
 
-        if (whitePlayerId.equals(playerId)) {
-            throw new IllegalArgumentException(
-                    "The player is already in the room"
-            );
-        }
-
+        // Si es un usuario nuevo, ocupa las negras.
         blackPlayerId = playerId;
     }
 }

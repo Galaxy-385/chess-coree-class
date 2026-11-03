@@ -62,13 +62,14 @@ class JoinRoomTest {
     }
 
     @Test
-    void shouldRejectOriginalPlayerJoiningAgain() {
+    void shouldAllowOriginalPlayerToJoinAgain() {
         createRoom.execute("room-1", "player-1");
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> joinRoom.execute("room-1", "player-1")
-        );
+        Room room = joinRoom.execute("room-1", "player-1");
+
+        assertEquals("player-1", room.whitePlayerId());
+        assertNull(room.blackPlayerId());
+        assertFalse(room.isFull());
     }
 
     @Test

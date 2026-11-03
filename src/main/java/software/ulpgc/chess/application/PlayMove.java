@@ -31,8 +31,11 @@ public class PlayMove {
             throw new IllegalArgumentException("Player ID cannot be empty");
         }
 
-        if (from == null || from.isBlank() || to == null || to.isBlank()) {
-            throw new IllegalArgumentException("Origin and destination cannot be empty");
+        if (from == null || from.isBlank()
+                || to == null || to.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Origin and destination cannot be empty"
+            );
         }
 
         Room room = roomRepository.findById(roomId)
@@ -51,11 +54,22 @@ public class PlayMove {
         }
 
         if (room.game().turn() != playerColor) {
-            throw new IllegalStateException("It is not this player's turn");
+            throw new IllegalStateException(
+                    "It is not this player's turn"
+            );
         }
 
         Square origin = Square.at(from);
         Square destination = Square.at(to);
+
+        // Comprobar que la pieza pertenece al jugador que realiza el movimiento.
+        Piece originPiece = room.game().board().pieceAt(origin);
+
+        if (originPiece == null || originPiece.color() != playerColor) {
+            throw new IllegalArgumentException(
+                    "Player cannot move a piece of the opponent's color"
+            );
+        }
 
         if (promotionPiece == null) {
             room.game().move(origin, destination);

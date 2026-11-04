@@ -1,12 +1,12 @@
 
 package software.ulpgc.chess.adapters.persistence;
 
-import software.ulpgc.chess.domain.Board;
-import software.ulpgc.chess.domain.CastlingRights;
-import software.ulpgc.chess.domain.File;
-import software.ulpgc.chess.domain.Piece;
-import software.ulpgc.chess.domain.Rank;
-import software.ulpgc.chess.domain.Square;
+import software.ulpgc.chess.domain.model.Board;
+import software.ulpgc.chess.domain.state.CastlingRights;
+import software.ulpgc.chess.domain.model.File;
+import software.ulpgc.chess.domain.model.Piece;
+import software.ulpgc.chess.domain.model.Rank;
+import software.ulpgc.chess.domain.model.Square;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,6 +1,9 @@
 package software.ulpgc.chess.domain;
 
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.history.PlayedMove;
+import software.ulpgc.chess.domain.model.Game;
+import software.ulpgc.chess.domain.model.Square;
 
 import static org.junit.jupiter.api.Assertions.*;
 

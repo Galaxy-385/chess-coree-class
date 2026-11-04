@@ -60,7 +60,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>software.ulpgc.chess.adapters.Main</mainClass>
+                    <mainClass>software.ulpgc.chess.adapters.launcher.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>

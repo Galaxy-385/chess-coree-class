@@ -1,9 +1,9 @@
 package software.ulpgc.chess.application;
 
-import software.ulpgc.chess.domain.Color;
-import software.ulpgc.chess.domain.Piece;
-import software.ulpgc.chess.domain.Room;
-import software.ulpgc.chess.domain.Square;
+import software.ulpgc.chess.domain.model.Color;
+import software.ulpgc.chess.domain.model.Piece;
+import software.ulpgc.chess.domain.model.Room;
+import software.ulpgc.chess.domain.model.Square;
 import software.ulpgc.chess.ports.RoomRepository;
 
 import java.util.Objects;

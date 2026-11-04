@@ -2,6 +2,8 @@
 package software.ulpgc.chess.domain;
 
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.history.HalfMoveClock;
+import software.ulpgc.chess.domain.model.Piece;
 
 import static org.junit.jupiter.api.Assertions.*;
 

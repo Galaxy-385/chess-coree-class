@@ -1,6 +1,6 @@
 package software.ulpgc.chess.ports;
 
-import software.ulpgc.chess.domain.Room;
+import software.ulpgc.chess.domain.model.Room;
 
 import java.util.Optional;
 

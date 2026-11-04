@@ -2,10 +2,8 @@
 package software.ulpgc.chess.adapters.persistence;
 
 import org.junit.jupiter.api.Test;
-import software.ulpgc.chess.domain.Board;
-import software.ulpgc.chess.domain.CastlingRights;
-import software.ulpgc.chess.domain.Piece;
-import software.ulpgc.chess.domain.Square;
+import software.ulpgc.chess.domain.model.*;
+import software.ulpgc.chess.domain.state.CastlingRights;
 
 import java.util.Map;
 
@@ -52,10 +50,10 @@ class BoardStateMapperTest {
 
         assertEquals(original.pieceCount(), restored.pieceCount());
 
-        for (software.ulpgc.chess.domain.File file
-                : software.ulpgc.chess.domain.File.values()) {
-            for (software.ulpgc.chess.domain.Rank rank
-                    : software.ulpgc.chess.domain.Rank.values()) {
+        for (File file
+                : File.values()) {
+            for (Rank rank
+                    : Rank.values()) {
 
                 Square square = new Square(file, rank);
 

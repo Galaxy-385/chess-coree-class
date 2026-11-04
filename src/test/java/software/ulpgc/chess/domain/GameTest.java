@@ -3,6 +3,7 @@ package software.ulpgc.chess.domain;
 import java.util.Map;
 import java.util.HashMap;
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.model.*;
 
 import static org.junit.Assert.*;
 

@@ -2,6 +2,7 @@
 package software.ulpgc.chess.domain;
 
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.model.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

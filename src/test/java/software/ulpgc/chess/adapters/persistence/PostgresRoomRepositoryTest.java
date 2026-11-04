@@ -2,9 +2,9 @@ package software.ulpgc.chess.adapters.persistence;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import software.ulpgc.chess.domain.Game;
-import software.ulpgc.chess.domain.Room;
-import software.ulpgc.chess.domain.Square;
+import software.ulpgc.chess.domain.model.Game;
+import software.ulpgc.chess.domain.model.Room;
+import software.ulpgc.chess.domain.model.Square;
 
 import java.util.Optional;
 import java.util.UUID;

@@ -1,6 +1,9 @@
 package software.ulpgc.chess.domain;
 
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.model.File;
+import software.ulpgc.chess.domain.model.Rank;
+import software.ulpgc.chess.domain.model.Square;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

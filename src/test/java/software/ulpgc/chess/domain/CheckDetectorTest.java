@@ -2,6 +2,11 @@
 package software.ulpgc.chess.domain;
 
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.model.Board;
+import software.ulpgc.chess.domain.model.Color;
+import software.ulpgc.chess.domain.model.Piece;
+import software.ulpgc.chess.domain.model.Square;
+import software.ulpgc.chess.domain.rules.detection.CheckDetector;
 
 import java.util.Map;
 

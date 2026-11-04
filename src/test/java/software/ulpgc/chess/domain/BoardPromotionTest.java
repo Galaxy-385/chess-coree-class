@@ -2,6 +2,9 @@
 package software.ulpgc.chess.domain;
 
 import org.junit.jupiter.api.Test;
+import software.ulpgc.chess.domain.model.Board;
+import software.ulpgc.chess.domain.model.Piece;
+import software.ulpgc.chess.domain.model.Square;
 
 import java.util.Map;
 

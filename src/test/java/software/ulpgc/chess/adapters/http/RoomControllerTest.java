@@ -10,7 +10,7 @@ import software.ulpgc.chess.application.CreateRoom;
 import software.ulpgc.chess.application.GetRoom;
 import software.ulpgc.chess.application.JoinRoom;
 import software.ulpgc.chess.application.PlayMove;
-import software.ulpgc.chess.domain.Room;
+import software.ulpgc.chess.domain.model.Room;
 import software.ulpgc.chess.ports.RoomRepository;
 
 import java.net.InetSocketAddress;

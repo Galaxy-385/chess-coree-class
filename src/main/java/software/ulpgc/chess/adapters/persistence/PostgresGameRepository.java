@@ -1,13 +1,13 @@
 
 package software.ulpgc.chess.adapters.persistence;
 
-import software.ulpgc.chess.domain.Board;
-import software.ulpgc.chess.domain.CastlingRights;
-import software.ulpgc.chess.domain.Color;
-import software.ulpgc.chess.domain.Game;
-import software.ulpgc.chess.domain.PlayedMove;
-import software.ulpgc.chess.domain.Piece;
-import software.ulpgc.chess.domain.Square;
+import software.ulpgc.chess.domain.model.Board;
+import software.ulpgc.chess.domain.state.CastlingRights;
+import software.ulpgc.chess.domain.model.Color;
+import software.ulpgc.chess.domain.model.Game;
+import software.ulpgc.chess.domain.history.PlayedMove;
+import software.ulpgc.chess.domain.model.Piece;
+import software.ulpgc.chess.domain.model.Square;
 import software.ulpgc.chess.ports.GameRepository;
 
 import java.sql.Connection;

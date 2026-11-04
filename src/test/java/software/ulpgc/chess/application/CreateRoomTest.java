@@ -3,7 +3,7 @@ package software.ulpgc.chess.application;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import software.ulpgc.chess.domain.Room;
+import software.ulpgc.chess.domain.model.Room;
 import software.ulpgc.chess.ports.RoomRepository;
 
 import java.util.HashMap;

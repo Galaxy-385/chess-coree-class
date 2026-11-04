@@ -1,7 +1,7 @@
 package software.ulpgc.chess.adapters.persistence;
 
-import software.ulpgc.chess.domain.Game;
-import software.ulpgc.chess.domain.Room;
+import software.ulpgc.chess.domain.model.Game;
+import software.ulpgc.chess.domain.model.Room;
 import software.ulpgc.chess.ports.GameRepository;
 import software.ulpgc.chess.ports.RoomRepository;
 

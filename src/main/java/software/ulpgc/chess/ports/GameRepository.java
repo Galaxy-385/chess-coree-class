@@ -1,7 +1,7 @@
 
 package software.ulpgc.chess.ports;
 
-import software.ulpgc.chess.domain.Game;
+import software.ulpgc.chess.domain.model.Game;
 import java.util.Optional;
 
 public interface GameRepository {

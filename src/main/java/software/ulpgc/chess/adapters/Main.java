@@ -1,25 +1,23 @@
-
 package software.ulpgc.chess.adapters;
 
+import com.sun.net.httpserver.HttpServer;
 import javafx.application.Application;
 import software.ulpgc.chess.adapters.http.ApiMain;
 
+import java.io.IOException;
+
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
-        Thread apiThread = new Thread(() -> {
-            try {
-                ApiMain.main(new String[0]);
-            } catch (Exception exception) {
-                exception.printStackTrace();
-            }
-        });
+        HttpServer apiServer = ApiMain.start();
 
-        apiThread.setName("chess-api-thread");
-        apiThread.setDaemon(false);
-        apiThread.start();
-
-        Application.launch(ChessApplication.class, args);
+        try {
+            Application.launch(ChessApplication.class, args);
+        } finally {
+            System.out.println("Closing Chess API...");
+            apiServer.stop(1);
+            System.out.println("Chess API stopped.");
+        }
     }
 }

@@ -152,35 +152,79 @@ Main classes:
 The main source code organization is:
 
 ```text
+Project Structure
+
+The project follows a modular architecture inspired by Hexagonal Architecture. The code is organized into domain logic, application use cases, ports, and external adapters.
+
 src/
-├── main/
-│   ├── java/
-│   │   └── software/ulpgc/chess/
-│   │       ├── adapters/
-│   │       │   ├── http/
-│   │       │   ├── persistence/
-│   │       │   ├── ChessApplication.java
-│   │       │   ├── Main.java
-│   │       │   └── PieceSprite.java
-│   │       ├── application/
-│   │       ├── domain/
-│   │       └── ports/
-│   └── resources/
-│       └── software/ulpgc/chess/
-│           ├── chess.css
-│           └── chess_battle_sprite_7_frames.png
-│
+└── main/
+    ├── java/
+    │   └── software/ulpgc/chess/
+    │       │
+    │       ├── domain/
+    │       │   ├── model/
+    │       │   │   └── Core domain entities and value objects
+    │       │   │
+    │       │   ├── rules/
+    │       │   │   ├── movement/
+    │       │   │   │   ├── MovementRule.java
+    │       │   │   │   └── CastlingMovementRule.java
+    │       │   │   │
+    │       │   │   └── detection/
+    │       │   │       ├── AttackDetector.java
+    │       │   │       ├── CheckDetector.java
+    │       │   │       ├── CheckmateDetector.java
+    │       │   │       ├── DrawDetector.java
+    │       │   │       ├── KingDetector.java
+    │       │   │       ├── MaterialDrawDetector.java
+    │       │   │       └── StalemateDetector.java
+    │       │   │
+    │       │   ├── history/
+    │       │   │   ├── GameHistory.java
+    │       │   │   ├── PlayedMove.java
+    │       │   │   ├── PositionKey.java
+    │       │   │   └── HalfMoveClock.java
+    │       │   │
+    │       │   └── state/
+    │       │       └── CastlingRights.java
+    │       │
+    │       ├── application/
+    │       │   └── Application use cases
+    │       │
+    │       ├── ports/
+    │       │   └── Repository interfaces
+    │       │
+    │       └── adapters/
+    │           ├── desktop/
+    │           │   ├── ChessApplication.java
+    │           │   └── PieceSprite.java
+    │           │
+    │           ├── launcher/
+    │           │   └── Main.java
+    │           │
+    │           ├── http/
+    │           │   ├── ApiMain.java
+    │           │   ├── RoomApiClient.java
+    │           │   └── RoomController.java
+    │           │
+    │           └── persistence/
+    │               ├── BoardStateJsonMapper.java
+    │               ├── BoardStateMapper.java
+    │               ├── DatabaseConnection.java
+    │               ├── PostgresConnection.java
+    │               ├── PostgresGameRepository.java
+    │               └── PostgresRoomRepository.java
+    │
+    └── resources/
+        └── software/ulpgc/chess/
+            ├── chess.css
+            └── chess_battle_sprite_7_frames.png
+
+src/
 └── test/
     └── java/
-        └── software/ulpgc/chess/
-            ├── adapters/
-            ├── application/
-            └── domain/
+        └── Unit and integration tests
 
-pom.xml
-docker-compose.yml
-schema.sql
-README.md
 ```
 
 ---

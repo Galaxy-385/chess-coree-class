@@ -369,13 +369,13 @@ http://localhost:8080
 
 ### 6.1. API Endpoints
 
-| Operation | HTTP Method | Endpoint | Request Body |
+| Operation | HTTP Method | Endpoint | Request Body | HTTP Response |
 |---|---|---|---|
-| Create room | POST | `/rooms` | `roomId`, `playerId` |
-| Join room | POST | `/rooms/{roomId}/join` | `playerId` |
-| Get room | GET | `/rooms/{roomId}` | None |
-| Play move | POST | `/rooms/{roomId}/moves` | `playerId`, `from`, `to`, `promotionPiece` |
-| Get move history | GET | `/rooms/{roomId}/moves` | None |
+| Create room | POST | `/rooms` | `roomId`, `playerId` | 201 Created |
+| Join room | POST | `/rooms/{roomId}/join` | `playerId` | 200 OK |
+| Get room | GET | `/rooms/{roomId}` | None | 200 OK |
+| Play move | POST | `/rooms/{roomId}/moves` | `playerId`, `from`, `to`, `promotionPiece` | 200 OK |
+| Get move history | GET | `/rooms/{roomId}/moves` | None | 200 OK |
 
 **Data format:** JSON.
 

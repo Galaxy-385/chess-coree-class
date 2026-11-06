@@ -445,7 +445,7 @@ The stored information allows rooms and their games to be recovered after restar
 
 **Database screenshot:**
 
-[INSERT A SCREENSHOT OF THE POSTGRESQL TABLES AND THEIR DATA HERE]
+![PostgreSQL database tables](docs/images/database-tables.png)
 
 ---
 

@@ -559,41 +559,43 @@ Manual tests have also been performed to check the main application workflows.
 
 This section must describe the actual limitations of the submitted version.
 
-- Implemented chess rules: [SPECIFY].
-- Unsupported rules or situations: [SPECIFY].
-- User management: [SPECIFY].
-- Concurrent player handling: [SPECIFY].
-- Communication between different computers: [SPECIFY].
-- Network and configuration requirements: [SPECIFY].
+Implemented chess rules: The application implements standard chess piece movement, captures, turn validation, castling,
+en passant, pawn promotion, check, checkmate, and stalemate detection. Draw detection is also supported
+by the domain logic.
 
-The README should not claim support for features that have not been implemented and verified.
+Unsupported rules or situations: Chess variants and additional game modes are not part of the application's standard
+gameplay. The application does not include advanced features such as chess clocks or tournament management.
+
+User management: Players are identified by player IDs when creating or joining rooms. The application does not implement
+a full user account system with registration, authentication, or profile management.
+
+Concurrent player handling: The backend validates player turns and manages the shared game state. However, simultaneous
+conflicting requests have not been verified as an atomic operation.
+
+Communication between different computers: The application uses an HTTP API to communicate with the backend. Running
+clients on different computers requires network access to the computer hosting the backend.
+This configuration must be verified separately.
+
+Network and configuration requirements: The application requires a running backend and a PostgreSQL database.
+The HTTP API uses port 8080, while PostgreSQL uses port 5432. Database connection settings can be configured through
+environment variables. Network access and firewall configuration may be required when connecting from other computers.
 
 ---
 
-## 13. Video Demonstration (Optional)
+## 13. Author
 
-The project assignment does not require an explanatory video. However, a short demonstration can be included as supplementary material.
-
-[INSERT A LINK TO A DEMONSTRATION VIDEO, IF AVAILABLE]
-
----
-
-## 14. Author
-
-**Author:** [FULL NAME]
+**Author:** Víctor Jesús García Abad
 
 **Degree:** Computer Engineering
-
-**School:** School of Computer Engineering
 
 **University:** University of Las Palmas de Gran Canaria
 
 **Course:** Software Engineering 2
 
-**Academic Year:** [ACADEMIC YEAR]
+**Academic Year:** 2026-2027
 
 ---
 
-## 15. License
+## 14. License
 
-[SPECIFY THE PROJECT LICENSE, IF ONE HAS BEEN DEFINED.]
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for the full license text.

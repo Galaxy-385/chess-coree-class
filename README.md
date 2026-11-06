@@ -463,15 +463,15 @@ The general workflow is:
 
 **Room creation screenshot:**
 
-[INSERT A SCREENSHOT OF ROOM CREATION HERE]
+![PostgreSQL create room complete](docs/images/create-room-complete.png)
 
 **Room joining screenshot:**
 
-[INSERT A SCREENSHOT OF A USER JOINING AN EXISTING ROOM HERE]
+![PostgreSQL join room complete](docs/images/join-room-complete.png)
 
 **Two-player game screenshot:**
 
-[INSERT A SCREENSHOT OF BOTH CLIENTS CONNECTED, IF VERIFIED]
+![PostgreSQL two-player game](docs/images/two-player-game.png)
 
 ---
 
@@ -504,31 +504,23 @@ This section contains visual evidence demonstrating the application's functional
 
 ### 10.1. Chessboard
 
-[INSERT A SCREENSHOT OF THE WORKING CHESSBOARD HERE]
+![PostgreSQL chessboard](docs/images/chessboard.png)
 
 ### 10.2. Room Creation
 
-[INSERT A SCREENSHOT OF ROOM CREATION HERE]
+![PostgreSQL create room panel](docs/images/create-room-panel.png)
 
 ### 10.3. Joining a Room
 
-[INSERT A SCREENSHOT OF A USER JOINING AN EXISTING ROOM HERE]
+![PostgreSQL join room panel](docs/images/join-room-panel.png)
 
 ### 10.4. Active Game
 
-[INSERT A SCREENSHOT OF AN ACTIVE GAME WITH MOVES PLAYED HERE]
+![PostgreSQL active game](docs/images/active-game.png)
 
 ### 10.5. Game History
 
-[INSERT A SCREENSHOT OF THE GAME HISTORY OR STORED MOVES HERE]
-
-### 10.6. Persistence After Backend Restart
-
-[INSERT A SCREENSHOT SHOWING THAT THE ROOM OR GAME IS STILL AVAILABLE AFTER RESTARTING THE SERVER]
-
-### 10.7. Frontend-Backend Communication
-
-[INSERT A SCREENSHOT SHOWING HTTP REQUESTS OR TWO CLIENTS COMMUNICATING WITH THE SAME BACKEND]
+![PostgreSQL game history](docs/images/game-history.png)
 
 ---
 
@@ -559,7 +551,7 @@ Manual tests have also been performed to check the main application workflows.
                          persistence after backend restart, invalid request handling, and HTTP server
                          shutdown were manually verified.
 
-[INSERT A SCREENSHOT OF THE `mvn test` EXECUTION SHOWING THE FINAL RESULTS]
+![PostgreSQL test results](docs/images/test-results.png)
 
 ---
 

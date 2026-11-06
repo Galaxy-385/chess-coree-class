@@ -106,11 +106,19 @@ Main classes include:
 - `Piece`: represents chess pieces.
 - `Square`: represents board squares.
 - `PlayedMove`: represents a played move.
-- `MovementRules`: groups movement rules.
+- `MovementRule`: interface defining piece movement rules.
+- `CastlingMovementRule`: handles castling movement.
+- `AttackDetector`: detects attacked squares.
 - `CheckDetector`: detects check situations.
 - `CheckmateDetector`: detects checkmate.
+- `DrawDetector`: detects draw conditions.
+- `KingDetector`: handles king-related detection.
+- `MaterialDrawDetector`: detects insufficient material.
 - `StalemateDetector`: detects stalemate.
 - `GameHistory`: manages position history.
+- `PositionKey`: identifies a complete game position.
+- `HalfMoveClock`: tracks half-move information.
+- `CastlingRights`: stores castling availability.
 
 **Application (`application/`)**
 
@@ -131,14 +139,18 @@ Define the interfaces through which the application communicates with external c
 
 **Adapters (`adapters/`)**
 
-Implement communication with external systems:
+Implement communication with external systems and infrastructure:
 
-- `ApiMain`: configures and starts the HTTP server.
-- `RoomController`: handles HTTP requests.
-- `PostgresRoomRepository`: room persistence.
-- `PostgresGameRepository`: game persistence.
-- `PostgresConnection`: PostgreSQL connectivity.
-- `BoardStateMapper` and `BoardStateJsonMapper`: transform board states.
+- `launcher/Main`: starts the HTTP server and JavaFX application.
+- `desktop/ChessApplication`: JavaFX graphical application.
+- `desktop/PieceSprite`: handles chess piece graphics.
+- `http/ApiMain`: configures and starts the HTTP server.
+- `http/RoomController`: handles incoming HTTP requests.
+- `http/RoomApiClient`: sends requests from the frontend to the backend.
+- `persistence/PostgresRoomRepository`: room persistence.
+- `persistence/PostgresGameRepository`: game persistence.
+- `persistence/PostgresConnection`: PostgreSQL connectivity.
+- `persistence/BoardStateMapper` and `BoardStateJsonMapper`: transform board states.
 
 ### 3.3. Frontend Architecture
 
@@ -148,10 +160,10 @@ Communication with the backend is handled through an HTTP adapter, preventing th
 
 Main classes:
 
-- `ChessApplication`: main graphical application.
-- `Main`: application entry point.
-- `RoomApiClient`: HTTP communication with the backend.
-- `PieceSprite`: graphical representation of chess pieces.
+- `adapters.desktop.ChessApplication`: main graphical application.
+- `adapters.launcher.Main`: application entry point.
+- `adapters.http.RoomApiClient`: HTTP communication with the backend.
+- `adapters.desktop.PieceSprite`: graphical representation of chess pieces.
 
 ---
 
@@ -159,11 +171,9 @@ Main classes:
 
 The main source code organization is:
 
-```text
-Project Structure
-
 The project follows a modular architecture inspired by Hexagonal Architecture. The code is organized into domain logic, application use cases, ports, and external adapters.
 
+```text
 src/
 └── main/
     ├── java/
@@ -231,7 +241,8 @@ src/
 src/
 └── test/
     └── java/
-        └── Unit and integration tests
+        └── software/ulpgc/chess/
+            └── Unit and integration tests
 
 ```
 
@@ -254,13 +265,13 @@ The following software is required:
 Clone the repository:
 
 ```bash
-git clone [REPOSITORY URL]
+git clone https://github.com/Galaxy-385/chess-coree-class.git
 ```
 
 Navigate to the project directory:
 
 ```bash
-cd [PROJECT DIRECTORY]
+cd chess-coree-class
 ```
 
 ### 5.3. Configure PostgreSQL
@@ -316,7 +327,7 @@ mvn test
 The main application entry point is:
 
 ```text
-software.ulpgc.chess.adapters.Main
+software.ulpgc.chess.adapters.launcher.Main
 ```
 
 When `Main` is executed:
@@ -360,12 +371,13 @@ http://localhost:8080
 
 Complete this table with the actual HTTP methods, paths, and request bodies implemented in `RoomController.java`.
 
-| Operation | HTTP Method | Endpoint | Description |
+| Operation | HTTP Method | Endpoint | Request Body |
 |---|---|---|---|
-| Create room | [METHOD] | [PATH] | Creates a new room. |
-| Join room | [METHOD] | [PATH] | Allows a user to join an existing room. |
-| Get room | [METHOD] | [PATH] | Retrieves the current room state. |
-| Play move | [METHOD] | [PATH] | Registers a move in a game. |
+| Create room | POST | `/rooms` | `roomId`, `playerId` |
+| Join room | POST | `/rooms/{roomId}/join` | `playerId` |
+| Get room | GET | `/rooms/{roomId}` | None |
+| Play move | POST | `/rooms/{roomId}/moves` | `playerId`, `from`, `to`, `promotionPiece` |
+| Get move history | GET | `/rooms/{roomId}/moves` | None |
 
 **Data format:** JSON.
 
@@ -382,7 +394,21 @@ The system handles situations such as:
 - Attempting moves that are not allowed by the implemented rules.
 - Communication errors with the backend.
 
-[DOCUMENT THE ACTUAL HTTP STATUS CODES AND ERROR RESPONSES HERE.]
+The API returns JSON error responses using the following HTTP status codes:
+
+| Status Code | Description |
+|---|---|
+| 400 Bad Request | Invalid arguments or request data. |
+| 404 Not Found | Requested room or endpoint does not exist. |
+| 409 Conflict | Operation conflicts with the current application state. |
+| 500 Internal Server Error | Unexpected internal server error. |
+
+Error responses follow this JSON structure:
+
+```json
+{
+  "error": "Error description"
+}
 
 ---
 
@@ -399,6 +425,19 @@ Persistence is encapsulated through repository adapters implementing the ports d
 - `PostgresGameRepository`: stores and retrieves games.
 - `BoardStateMapper`: transforms board states.
 - `BoardStateJsonMapper`: converts board states to and from JSON.
+
+### Database Schema
+
+The database contains three main tables:
+
+- `rooms`: stores room identifiers and the white and black player identifiers.
+- `games`: stores the initial and current board states, turn information, castling rights, king and rook starting
+           positions, en passant targets, and move counters.
+- `moves`: stores the moves played during a game, including move numbers, origin and destination squares,
+           promotion pieces, and timestamps.
+
+The relationships between these tables ensure that games belong to rooms and moves belong to games.
+Foreign key constraints use `ON DELETE CASCADE` to maintain referential integrity.
 
 ### Persistence
 
@@ -448,7 +487,14 @@ The implemented elements include:
 - Persistent storage of rooms and games.
 - Separation between domain, application, communication, and persistence.
 
-[EXPAND HERE ON THE MAIN ORIGINAL CONTRIBUTION AND EXPLAIN WHY IT WAS ADDED.]
+The main contribution of this project is the integration of a chess application with a persistent room-based multiplayer
+architecture.
+
+The system separates chess logic from application use cases, HTTP communication, and database persistence. This makes
+the application easier to maintain and allows infrastructure components to be changed independently of the core business logic.
+
+The customized chess interface and sprite-based piece graphics provide a visual identity for the application, while
+the backend allows players to share rooms and preserve their game progress.
 
 ---
 
@@ -505,11 +551,13 @@ Manual tests have also been performed to check the main application workflows.
 
 ### Test Results
 
-**Total automated tests:** [SPECIFY FINAL MAVEN TEST RESULT]
+**Total automated tests:** 256 tests
 
-**Build result:** [SPECIFY RESULT]
+**Build result:** SUCCESS
 
-**Manual verification:** [DESCRIBE THE RESULTS]
+**Manual verification:** Room creation, joining, move execution, turn validation, room retrieval,
+                         persistence after backend restart, invalid request handling, and HTTP server
+                         shutdown were manually verified.
 
 [INSERT A SCREENSHOT OF THE `mvn test` EXECUTION SHOWING THE FINAL RESULTS]
 

@@ -42,9 +42,17 @@ The main goal is to provide an application where users can share a game room, ma
 | JUnit | Automated testing |
 | Docker Compose | Database environment |
 
-**JDK Version:** [SPECIFY JDK VERSION]
+**JDK Version:** 25
 
-**PostgreSQL Version:** [SPECIFY POSTGRESQL VERSION]
+**JavaFX Version:** 25.0.1
+
+**PostgreSQL Version:** 17
+
+**Additional Dependencies:**
+- PostgreSQL JDBC: 42.7.7
+- Jackson Databind: 2.20.1
+- JUnit 4: 4.13.1
+- JUnit Jupiter: 5.12.2
 
 ---
 

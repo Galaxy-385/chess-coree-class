@@ -407,6 +407,7 @@ Error responses follow this JSON structure:
 {
   "error": "Error description"
 }
+
 ```
 
 ---

@@ -175,70 +175,70 @@ The project follows a modular architecture inspired by Hexagonal Architecture. T
 
 ```text
 src/
-└── main/
-    ├── java/
-    │   └── software/ulpgc/chess/
-    │       │
-    │       ├── domain/
-    │       │   ├── model/
-    │       │   │   └── Core domain entities and value objects
-    │       │   │
-    │       │   ├── rules/
-    │       │   │   ├── movement/
-    │       │   │   │   ├── MovementRule.java
-    │       │   │   │   └── CastlingMovementRule.java
-    │       │   │   │
-    │       │   │   └── detection/
-    │       │   │       ├── AttackDetector.java
-    │       │   │       ├── CheckDetector.java
-    │       │   │       ├── CheckmateDetector.java
-    │       │   │       ├── DrawDetector.java
-    │       │   │       ├── KingDetector.java
-    │       │   │       ├── MaterialDrawDetector.java
-    │       │   │       └── StalemateDetector.java
-    │       │   │
-    │       │   ├── history/
-    │       │   │   ├── GameHistory.java
-    │       │   │   ├── PlayedMove.java
-    │       │   │   ├── PositionKey.java
-    │       │   │   └── HalfMoveClock.java
-    │       │   │
-    │       │   └── state/
-    │       │       └── CastlingRights.java
-    │       │
-    │       ├── application/
-    │       │   └── Application use cases
-    │       │
-    │       ├── ports/
-    │       │   └── Repository interfaces
-    │       │
-    │       └── adapters/
-    │           ├── desktop/
-    │           │   ├── ChessApplication.java
-    │           │   └── PieceSprite.java
-    │           │
-    │           ├── launcher/
-    │           │   └── Main.java
-    │           │
-    │           ├── http/
-    │           │   ├── ApiMain.java
-    │           │   ├── RoomApiClient.java
-    │           │   └── RoomController.java
-    │           │
-    │           └── persistence/
-    │               ├── BoardStateJsonMapper.java
-    │               ├── BoardStateMapper.java
-    │               ├── DatabaseConnection.java
-    │               ├── PostgresConnection.java
-    │               ├── PostgresGameRepository.java
-    │               └── PostgresRoomRepository.java
-    │
-    └── resources/
-        └── software/ulpgc/chess/
-            ├── chess.css
-            └── chess_battle_sprite_7_frames.png
-
-src/
+├── main/
+│    ├── java/
+│    │   └── software/ulpgc/chess/
+│    │       │
+│    │       ├── domain/
+│    │       │   ├── model/
+│    │       │   │   └── Core domain entities and value objects
+│    │       │   │
+│    │       │   ├── rules/
+│    │       │   │   ├── movement/
+│    │       │   │   │   ├── MovementRule.java
+│    │       │   │   │   └── CastlingMovementRule.java
+│    │       │   │   │
+│    │       │   │   └── detection/
+│    │       │   │       ├── AttackDetector.java
+│    │       │   │       ├── CheckDetector.java
+│    │       │   │       ├── CheckmateDetector.java
+│    │       │   │       ├── DrawDetector.java
+│    │       │   │       ├── KingDetector.java
+│    │       │   │       ├── MaterialDrawDetector.java
+│    │       │   │       └── StalemateDetector.java
+│    │       │   │
+│    │       │   ├── history/
+│    │       │   │   ├── GameHistory.java
+│    │       │   │   ├── PlayedMove.java
+│    │       │   │   ├── PositionKey.java
+│    │       │   │   └── HalfMoveClock.java
+│    │       │   │
+│    │       │   └── state/
+│    │       │       └── CastlingRights.java
+│    │       │
+│    │       ├── application/
+│    │       │   └── Application use cases
+│    │       │
+│    │       ├── ports/
+│    │       │   └── Repository interfaces
+│    │       │
+│    │       └── adapters/
+│    │           ├── desktop/
+│    │           │   ├── ChessApplication.java
+│    │           │   └── PieceSprite.java
+│    │           │
+│    │           ├── launcher/
+│    │           │   └── Main.java
+│    │           │
+│    │           ├── http/
+│    │           │   ├── ApiMain.java
+│    │           │   ├── RoomApiClient.java
+│    │           │   └── RoomController.java
+│    │           │
+│    │           └── persistence/
+│    │               ├── BoardStateJsonMapper.java
+│    │               ├── BoardStateMapper.java
+│    │               ├── DatabaseConnection.java
+│    │               ├── PostgresConnection.java
+│    │               ├── PostgresGameRepository.java
+│    │               └── PostgresRoomRepository.java
+│    │
+│    └── resources/
+│        └── software/ulpgc/chess/
+│            ├── chess.css
+│            └── chess_battle_sprite_7_frames.png
+│
+│
 └── test/
     └── java/
         └── software/ulpgc/chess/
@@ -254,11 +254,11 @@ src/
 
 The following software is required:
 
-- A compatible JDK.
-- IntelliJ IDEA or another Maven-compatible IDE.
-- Maven.
+- JDK 25.
+- Apache Maven.
 - Docker Desktop with Docker Compose.
-- PostgreSQL, if the provided container is not used.
+- IntelliJ IDEA or another Java-compatible IDE (optional).
+- PostgreSQL 17, if running the database without Docker.
 
 ### 5.2. Clone the Repository
 
@@ -369,8 +369,6 @@ http://localhost:8080
 
 ### 6.1. API Endpoints
 
-Complete this table with the actual HTTP methods, paths, and request bodies implemented in `RoomController.java`.
-
 | Operation | HTTP Method | Endpoint | Request Body |
 |---|---|---|---|
 | Create room | POST | `/rooms` | `roomId`, `playerId` |
@@ -409,6 +407,7 @@ Error responses follow this JSON structure:
 {
   "error": "Error description"
 }
+```
 
 ---
 

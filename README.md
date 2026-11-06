@@ -557,7 +557,6 @@ Manual tests have also been performed to check the main application workflows.
 
 ## 12. Known Limitations
 
-This section must describe the actual limitations of the submitted version.
 
 Implemented chess rules: The application implements standard chess piece movement, captures, turn validation, castling,
 en passant, pawn promotion, check, checkmate, and stalemate detection. Draw detection is also supported

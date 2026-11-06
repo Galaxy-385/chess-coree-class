@@ -504,7 +504,7 @@ This section contains visual evidence demonstrating the application's functional
 
 ### 10.1. Chessboard
 
-![PostgreSQL chessboard](docs/images/chessboard.png)
+![PostgreSQL chess-board](docs/images/chess-board.png)
 
 ### 10.2. Room Creation
 
@@ -551,7 +551,7 @@ Manual tests have also been performed to check the main application workflows.
                          persistence after backend restart, invalid request handling, and HTTP server
                          shutdown were manually verified.
 
-![PostgreSQL test results](docs/images/test-results.png)
+![PostgreSQL mvn tests](docs/images/mvn-tests.png)
 
 ---
 
